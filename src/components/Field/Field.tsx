@@ -1,4 +1,6 @@
-/* eslint-disable import/no-extraneous-dependencies */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {useObservableState} from 'observable-hooks';
 import React, {useEffect, useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
@@ -57,6 +59,7 @@ export interface IFieldProps {
 }
 
 const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
   const tilesArr = useObservableState(tilesSubject$, []);
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
