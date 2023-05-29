@@ -7,6 +7,7 @@ import {StyleSheet, View} from 'react-native';
 import {tilesSubject$} from '../../utils/utils';
 
 import Tile from '../Tile/Tile';
+import calculateNeighbourTiles from '../../utils/calculateNeighbourTiles';
 
 const CELL_SIZE = 40;
 
@@ -85,7 +86,17 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
           y: (lastColumnTileNumber - index - 1) * CELL_SIZE,
         };
       }
-      return tile;
+      const neighbours = calculateNeighbourTiles(
+        columns,
+        rows,
+        tile,
+        columns * rows,
+        CELL_SIZE
+      );
+      return {
+        ...tile,
+        neighbours: neighbours,
+      };
     });
   }, [columns, rows, tilesCount]);
 
@@ -107,6 +118,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
             id={tile.id}
             x={tile.x}
             y={tile.y}
+            neighbours={tile.neighbours}
           />
         );
       })}

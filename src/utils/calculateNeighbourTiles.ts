@@ -2,10 +2,17 @@ type TileType = {
   id: number;
   x: number;
   y: number;
+  color: string;
 };
 
-type NeightbourTilesType = {
-  [key: number]: TileType;
+export type NeightbourTilesType = {
+  [key: number]: {
+    id: number;
+    x: number;
+    y: number;
+    color: string;
+    direction: string;
+  };
 };
 
 const calculateNeighbourTiles = (
@@ -27,6 +34,8 @@ const calculateNeighbourTiles = (
           id: tile.id + 1,
           x: tile.x,
           y: tile.y - cellSize,
+          color: tile.color,
+          direction: 'top',
         };
       }
       if (tile.id > firstColumnTileNumber) {
@@ -34,6 +43,8 @@ const calculateNeighbourTiles = (
           id: tile.id - 1,
           x: tile.x,
           y: tile.y + cellSize,
+          color: tile.color,
+          direction: 'down',
         };
       }
       if (leftTileNumber > 0) {
@@ -41,6 +52,8 @@ const calculateNeighbourTiles = (
           id: leftTileNumber,
           x: tile.x - cellSize,
           y: tile.y,
+          color: tile.color,
+          direction: 'right',
         };
       }
       if (rightTileNumber <= totalTiles) {
@@ -48,6 +61,8 @@ const calculateNeighbourTiles = (
           id: rightTileNumber,
           x: tile.x + cellSize,
           y: tile.y,
+          color: tile.color,
+          direction: 'left',
         };
       }
       return neighbourTiles;

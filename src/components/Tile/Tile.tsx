@@ -9,6 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {tap} from 'rxjs/operators';
 import {selectedTilesSubject$, tilesSubject$} from '../../utils/utils';
+import {NeightbourTilesType} from '../../utils/calculateNeighbourTiles';
 
 const styles = StyleSheet.create({
   tile: {
@@ -28,9 +29,10 @@ export interface ITile {
   id: number;
   x: number;
   y: number;
+  neighbours: NeightbourTilesType;
 }
 
-const Tile: React.FC<ITile> = ({color, id, x, y}) => {
+const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
   const offsetX = useSharedValue(x);
   const offsetY = useSharedValue(y);
   const borderWidth = useSharedValue(0);
@@ -50,7 +52,12 @@ const Tile: React.FC<ITile> = ({color, id, x, y}) => {
     const subSelectedTiles = selectedTilesSubject$
       .pipe(
         tap(tile => {
-          console.log(tile);
+          if (neighbours[tile.id]) {
+            if (neighbours[tile.id].direction === tile.dir) {
+              offsetX.value = x - tile.x;
+              offsetY.value = y - tile.y;
+            }
+          }
         })
       )
       .subscribe();
@@ -59,7 +66,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y}) => {
       subSelectedTile.unsubscribe();
       subSelectedTiles.unsubscribe();
     };
-  }, [borderWidth, id, offsetX, offsetY]);
+  }, [borderWidth, id, neighbours, offsetX, offsetY]);
 
   const subscriber = (xValue: number, yValue: number) => {
     const filtered = tilesSubject$.value.filter(tile => tile.id !== id);
@@ -70,6 +77,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y}) => {
         color,
         x: xValue,
         y: yValue,
+        neighbours,
       },
     ]);
   };
@@ -80,24 +88,52 @@ const Tile: React.FC<ITile> = ({color, id, x, y}) => {
     runOnJS(subscriber)(xValue, yValue);
   };
 
-  const subscriberTile = (xValue: number, yValue: number) => {
-    selectedTilesSubject$.next({x: xValue, y: yValue, id, color});
+  const subscriberTile = (xValue: number, yValue: number, dir: string) => {
+    selectedTilesSubject$.next({x: xValue, y: yValue, id, color, dir});
   };
 
-  const handleTile = (xValue: number, yValue: number) => {
+  const resetTile = () => {
+    selectedTilesSubject$.next({id: 0, x: 0, y: 0, color: '', dir: ''});
+  };
+
+  const handleTile = (xValue: number, yValue: number, dir: string) => {
     'worklet';
 
-    runOnJS(subscriberTile)(xValue, yValue);
+    runOnJS(subscriberTile)(xValue, yValue, dir);
+  };
+
+  const handleReset = () => {
+    'worklet';
+
+    runOnJS(resetTile)();
   };
 
   const gestureHandler = Gesture.Pan()
+    .activeOffsetX([-15, 15])
+    .activeOffsetY([-15, 15])
     .onStart(() => {
+      handleReset();
       borderWidth.value = withSpring(2);
     })
     .onUpdate(e => {
-      offsetX.value = e.translationX + x;
-      offsetY.value = e.translationY + y;
-      handleTile(e.translationX, e.translationY);
+      let direction = '';
+      if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
+        offsetX.value = e.translationX + x;
+        if (e.translationX + x > x) {
+          direction = 'right';
+        } else {
+          direction = 'left';
+        }
+        handleTile(e.translationX, 0, direction);
+      } else {
+        offsetY.value = e.translationY + y;
+        if (e.translationY + y > y) {
+          direction = 'top';
+        } else {
+          direction = 'down';
+        }
+        handleTile(0, e.translationY, direction);
+      }
     })
     .onEnd(e => {
       handleId(e.translationX + x, e.translationY + y);
