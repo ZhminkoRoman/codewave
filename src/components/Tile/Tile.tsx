@@ -54,8 +54,9 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
         tap(tile => {
           if (neighbours[tile.id]) {
             if (neighbours[tile.id].direction === tile.dir) {
-              offsetX.value = x - tile.x;
-              offsetY.value = y - tile.y;
+              console.log(x, tile.x);
+              offsetX.value = withSpring(x - tile.x);
+              offsetY.value = withSpring(y - tile.y);
             }
           }
         })
@@ -109,8 +110,8 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
   };
 
   const gestureHandler = Gesture.Pan()
-    .activeOffsetX([-15, 15])
-    .activeOffsetY([-15, 15])
+    .activeOffsetX([-20, 20])
+    .activeOffsetY([-20, 20])
     .onStart(() => {
       handleReset();
       borderWidth.value = withSpring(2);
@@ -118,25 +119,115 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
     .onUpdate(e => {
       let direction = '';
       if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
-        offsetX.value = e.translationX + x;
         if (e.translationX + x > x) {
           direction = 'right';
         } else {
           direction = 'left';
         }
-        handleTile(e.translationX, 0, direction);
-      } else {
-        offsetY.value = e.translationY + y;
+      } else if (Math.abs(e.translationX) < Math.abs(e.translationY)) {
         if (e.translationY + y > y) {
           direction = 'top';
         } else {
           direction = 'down';
         }
-        handleTile(0, e.translationY, direction);
+      }
+      if (direction === 'right') {
+        if (
+          offsetY.value === y &&
+          e.translationX <= 40 &&
+          e.translationX >= -40
+        ) {
+          offsetX.value = withSpring(e.translationX + x);
+          handleTile(e.translationX, 0, direction);
+        }
+      } else if (direction === 'left') {
+        if (
+          offsetY.value === y &&
+          e.translationX <= 40 &&
+          e.translationX >= -40
+        ) {
+          offsetX.value = withSpring(e.translationX + x);
+          handleTile(e.translationX, 0, direction);
+        }
+      } else if (direction === 'top') {
+        if (
+          offsetX.value === x &&
+          e.translationY <= 40 &&
+          e.translationY >= -40
+        ) {
+          offsetY.value = withSpring(e.translationY + y);
+          handleTile(0, e.translationY, direction);
+        }
+      } else if (direction === 'down') {
+        if (
+          offsetX.value === x &&
+          e.translationY <= 40 &&
+          e.translationY >= -40
+        ) {
+          offsetY.value = withSpring(e.translationY + y);
+          handleTile(0, e.translationY, direction);
+        }
       }
     })
     .onEnd(e => {
-      handleId(e.translationX + x, e.translationY + y);
+      let xPosition = x;
+      let yPosition = y;
+      let direction = '';
+      if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
+        if (e.translationX + x > x) {
+          direction = 'right';
+        } else {
+          direction = 'left';
+        }
+      } else if (Math.abs(e.translationX) < Math.abs(e.translationY)) {
+        if (e.translationY + y > y) {
+          direction = 'top';
+        } else {
+          direction = 'down';
+        }
+      }
+      if (direction === 'right') {
+        if (e.translationX > 20) {
+          xPosition = x + 40;
+          offsetX.value = withSpring(xPosition);
+          handleTile(40, 0, 'right');
+        } else if (e.translationX < 20 && e.translationX > 0) {
+          xPosition = x;
+          offsetX.value = withSpring(xPosition);
+          handleTile(0, 0, 'right');
+        }
+      } else if (direction === 'left') {
+        if (e.translationX < -20) {
+          xPosition = x - 40;
+          offsetX.value = withSpring(xPosition);
+          handleTile(-40, 0, 'left');
+        } else if (e.translationX > -20 && e.translationX < 0) {
+          xPosition = x;
+          offsetX.value = withSpring(xPosition);
+          handleTile(0, 0, 'left');
+        }
+      } else if (direction === 'top') {
+        if (e.translationY > 20) {
+          yPosition = y + 40;
+          offsetY.value = withSpring(yPosition);
+          handleTile(0, 40, 'top');
+        } else if (e.translationY < 20 && e.translationY > 0) {
+          yPosition = y;
+          offsetY.value = withSpring(yPosition);
+          handleTile(0, 0, 'top');
+        }
+      } else if (direction === 'down') {
+        if (e.translationY < -20) {
+          yPosition = y - 40;
+          offsetY.value = withSpring(yPosition);
+          handleTile(0, -40, 'down');
+        } else if (e.translationY > -20 && e.translationY < 0) {
+          yPosition = y;
+          offsetY.value = withSpring(yPosition);
+          handleTile(0, 0, 'down');
+        }
+      }
+      handleId(xPosition, yPosition);
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
