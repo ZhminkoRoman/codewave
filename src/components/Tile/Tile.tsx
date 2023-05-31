@@ -19,8 +19,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     top: 4,
     left: 4,
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
+    borderWidth: 2,
+    // borderColor: '#ceffff',
+    borderStyle: 'solid',
   },
 });
 
@@ -35,9 +38,17 @@ export interface ITile {
 const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
   const offsetX = useSharedValue(x);
   const offsetY = useSharedValue(y);
-  const borderWidth = useSharedValue(0);
-  const borderColor = useSharedValue('white');
-  const borderStyle = useSharedValue<'solid' | 'dashed' | 'dotted'>('solid');
+
+  let borderColor;
+  if (color === '#fefd42') {
+    borderColor = '#FFAC4D';
+  } else if (color === '#00F1FF') {
+    borderColor = '#beffff';
+  } else if (color === '#FF4365') {
+    borderColor = '#8c221d';
+  } else if (color === '#5af4ac') {
+    borderColor = '#0f7d7b';
+  }
 
   /**
    * *: Observer (or Subject) that react on event "Tap", with receiving tapped tile props (like id, x, y, color);
@@ -54,7 +65,6 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
         tap(tile => {
           if (neighbours[tile.id]) {
             if (neighbours[tile.id].direction === tile.dir) {
-              console.log(x, tile.x);
               offsetX.value = withSpring(x - tile.x);
               offsetY.value = withSpring(y - tile.y);
             }
@@ -67,7 +77,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
       subSelectedTile.unsubscribe();
       subSelectedTiles.unsubscribe();
     };
-  }, [borderWidth, id, neighbours, offsetX, offsetY]);
+  }, [id, neighbours, offsetX, offsetY]);
 
   const subscriber = (xValue: number, yValue: number) => {
     const filtered = tilesSubject$.value.filter(tile => tile.id !== id);
@@ -114,7 +124,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
     .activeOffsetY([-20, 20])
     .onStart(() => {
       handleReset();
-      borderWidth.value = withSpring(2);
+      // borderWidth.value = withSpring(2);
     })
     .onUpdate(e => {
       let direction = '';
@@ -131,7 +141,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           direction = 'down';
         }
       }
-      if (direction === 'right') {
+      if (
+        direction === 'right' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'left')
+      ) {
         if (
           offsetY.value === y &&
           e.translationX <= 40 &&
@@ -140,7 +153,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           offsetX.value = withSpring(e.translationX + x);
           handleTile(e.translationX, 0, direction);
         }
-      } else if (direction === 'left') {
+      } else if (
+        direction === 'left' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'right')
+      ) {
         if (
           offsetY.value === y &&
           e.translationX <= 40 &&
@@ -149,7 +165,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           offsetX.value = withSpring(e.translationX + x);
           handleTile(e.translationX, 0, direction);
         }
-      } else if (direction === 'top') {
+      } else if (
+        direction === 'top' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'down')
+      ) {
         if (
           offsetX.value === x &&
           e.translationY <= 40 &&
@@ -158,7 +177,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           offsetY.value = withSpring(e.translationY + y);
           handleTile(0, e.translationY, direction);
         }
-      } else if (direction === 'down') {
+      } else if (
+        direction === 'down' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'top')
+      ) {
         if (
           offsetX.value === x &&
           e.translationY <= 40 &&
@@ -186,7 +208,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           direction = 'down';
         }
       }
-      if (direction === 'right') {
+      if (
+        direction === 'right' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'left')
+      ) {
         if (e.translationX > 20) {
           xPosition = x + 40;
           offsetX.value = withSpring(xPosition);
@@ -196,7 +221,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           offsetX.value = withSpring(xPosition);
           handleTile(0, 0, 'right');
         }
-      } else if (direction === 'left') {
+      } else if (
+        direction === 'left' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'right')
+      ) {
         if (e.translationX < -20) {
           xPosition = x - 40;
           offsetX.value = withSpring(xPosition);
@@ -206,7 +234,14 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           offsetX.value = withSpring(xPosition);
           handleTile(0, 0, 'left');
         }
-      } else if (direction === 'top') {
+      } else if (
+        direction === 'top' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'down')
+      ) {
+        console.log(
+          Object.values(neighbours).find(neighb => neighb.direction === 'down'),
+          neighbours
+        );
         if (e.translationY > 20) {
           yPosition = y + 40;
           offsetY.value = withSpring(yPosition);
@@ -216,7 +251,14 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           offsetY.value = withSpring(yPosition);
           handleTile(0, 0, 'top');
         }
-      } else if (direction === 'down') {
+      } else if (
+        direction === 'down' &&
+        Object.values(neighbours).find(neighb => neighb.direction === 'top')
+      ) {
+        console.log(
+          Object.values(neighbours).find(neighb => neighb.direction === 'top'),
+          neighbours
+        );
         if (e.translationY < -20) {
           yPosition = y - 40;
           offsetY.value = withSpring(yPosition);
@@ -232,9 +274,6 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{translateX: offsetX.value}, {translateY: offsetY.value}],
-    borderWidth: borderWidth.value,
-    borderStyle: borderStyle.value,
-    borderColor: borderColor.value,
   }));
 
   return (
@@ -249,12 +288,13 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
               width: 0,
               height: 0,
             },
+            borderColor: borderColor,
             shadowOpacity: 0.5,
             shadowRadius: 10,
           },
           animatedStyle,
         ]}>
-        <Text>{id}</Text>
+        {/* <Text>{id}</Text> */}
       </Animated.View>
     </GestureDetector>
   );

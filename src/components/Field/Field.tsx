@@ -26,8 +26,8 @@ export type SquareType = {
 const colors: ColorType = {
   '1': '#FF4365',
   '2': '#00F1FF',
-  '3': '#ffff92',
-  '4': '#0161E8',
+  '3': '#fefd42',
+  '4': '#5af4ac',
 };
 
 // #66dbd9;
@@ -42,7 +42,9 @@ const styles = StyleSheet.create({
   field: {
     position: 'relative',
     display: 'flex',
-    backgroundColor: '#fff',
+    // backgroundColor: '#fff',
+    // backgroundColor: '#221a22',
+    // backgroundColor: '#035b6d',
     // shadowColor: '#fff',
     // shadowOffset: {
     //   width: 0,

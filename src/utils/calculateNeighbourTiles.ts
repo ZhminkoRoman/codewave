@@ -24,7 +24,7 @@ const calculateNeighbourTiles = (
 ): NeightbourTilesType => {
   const neighbourTiles: NeightbourTilesType = {};
   for (let column = 1; column <= columns; column++) {
-    const lastColumnTileNumber = column * rows;
+    const lastColumnTileNumber = column * rows - 1;
     if (tile.id <= lastColumnTileNumber) {
       const firstColumnTileNumber = lastColumnTileNumber - rows + 1;
       const leftTileNumber = tile.id - rows;
@@ -56,7 +56,7 @@ const calculateNeighbourTiles = (
           direction: 'right',
         };
       }
-      if (rightTileNumber <= totalTiles) {
+      if (rightTileNumber < totalTiles) {
         neighbourTiles[rightTileNumber] = {
           id: rightTileNumber,
           x: tile.x + cellSize,

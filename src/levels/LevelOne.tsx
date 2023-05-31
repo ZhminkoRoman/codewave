@@ -11,9 +11,11 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    // backgroundColor: '#101831',
+    backgroundColor: '#101831',
     // backgroundColor: '#0d0221',
-    backgroundColor: '#1B2853',
+    // backgroundColor: '#1B2853',
+    // backgroundColor: '#2b394b',
+    // backgroundColor: '#002232',
     color: '#ffffff',
   },
   image: {
