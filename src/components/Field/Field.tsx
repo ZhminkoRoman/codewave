@@ -4,7 +4,8 @@
 import {useObservableState} from 'observable-hooks';
 import React, {useEffect, useMemo} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {tilesSubject$} from '../../utils/utils';
+import {tilesSubject$, levelProperties$} from '../../utils/utils';
+import {map, tap} from 'rxjs/operators';
 
 import Tile from '../Tile/Tile';
 import calculateNeighbourTiles from '../../utils/calculateNeighbourTiles';
@@ -27,7 +28,7 @@ const colors: ColorType = {
   '1': '#FF4365',
   '2': '#00F1FF',
   '3': '#fefd42',
-  '4': '#5af4ac',
+  '4': '#fff',
 };
 
 // #66dbd9;
@@ -65,7 +66,38 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
   const tilesArr = useObservableState(tilesSubject$, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const tilesSubscription = tilesSubject$
+      .pipe(
+        map(subedTiles => {
+          return subedTiles.forEach((til, index) => {
+            const updTile = {
+              ...til,
+              id: index,
+            };
+            const neighbours = calculateNeighbourTiles(
+              columns,
+              rows,
+              updTile,
+              columns * rows,
+              CELL_SIZE
+            );
+            return {
+              ...til,
+              neighbours: neighbours,
+            };
+          });
+        })
+      )
+      .subscribe();
+    const levelSubscription = levelProperties$.subscribe();
+
+    return () => {
+      tilesSubscription.unsubscribe();
+      levelSubscription.unsubscribe();
+    };
+  }, [columns, rows]);
+
   const tiles = useMemo(() => {
     let column = 1;
     return Array.from({length: tilesCount}, (_, index) => {

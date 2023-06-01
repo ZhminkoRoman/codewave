@@ -22,8 +22,10 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderWidth: 2,
-    // borderColor: '#ceffff',
     borderStyle: 'solid',
+  },
+  tileText: {
+    fontWeight: 'bold',
   },
 });
 
@@ -43,19 +45,12 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
   if (color === '#fefd42') {
     borderColor = '#FFAC4D';
   } else if (color === '#00F1FF') {
-    borderColor = '#beffff';
+    borderColor = '#395789';
   } else if (color === '#FF4365') {
     borderColor = '#8c221d';
-  } else if (color === '#5af4ac') {
-    borderColor = '#0f7d7b';
+  } else if (color === '#fff') {
+    borderColor = '#ccc';
   }
-
-  /**
-   * *: Observer (or Subject) that react on event "Tap", with receiving tapped tile props (like id, x, y, color);
-   * *: After that it should wait until second tap and check, if it the same tile or different. If different - than is this different tile is neighbour tile?
-   * *: If tile is neighbour, than throw props from second tapped tile (id, x, y, color) and call function to change x and y positions between those two tiles with provided x / y - values;
-   * TODO: Could be used (instead of gestureHandler.tap - fromEvent);
-   */
 
   useEffect(() => {
     const subSelectedTile = tilesSubject$.subscribe();
@@ -93,7 +88,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
     ]);
   };
 
-  const handleId = (xValue: number, yValue: number) => {
+  const handleSwipeEnd = (xValue: number, yValue: number) => {
     'worklet';
 
     runOnJS(subscriber)(xValue, yValue);
@@ -107,7 +102,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
     selectedTilesSubject$.next({id: 0, x: 0, y: 0, color: '', dir: ''});
   };
 
-  const handleTile = (xValue: number, yValue: number, dir: string) => {
+  const handleSwipeUpdate = (xValue: number, yValue: number, dir: string) => {
     'worklet';
 
     runOnJS(subscriberTile)(xValue, yValue, dir);
@@ -124,7 +119,6 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
     .activeOffsetY([-20, 20])
     .onStart(() => {
       handleReset();
-      // borderWidth.value = withSpring(2);
     })
     .onUpdate(e => {
       let direction = '';
@@ -151,7 +145,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           e.translationX >= -40
         ) {
           offsetX.value = withSpring(e.translationX + x);
-          handleTile(e.translationX, 0, direction);
+          handleSwipeUpdate(e.translationX, 0, direction);
         }
       } else if (
         direction === 'left' &&
@@ -163,7 +157,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           e.translationX >= -40
         ) {
           offsetX.value = withSpring(e.translationX + x);
-          handleTile(e.translationX, 0, direction);
+          handleSwipeUpdate(e.translationX, 0, direction);
         }
       } else if (
         direction === 'top' &&
@@ -175,7 +169,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           e.translationY >= -40
         ) {
           offsetY.value = withSpring(e.translationY + y);
-          handleTile(0, e.translationY, direction);
+          handleSwipeUpdate(0, e.translationY, direction);
         }
       } else if (
         direction === 'down' &&
@@ -187,7 +181,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           e.translationY >= -40
         ) {
           offsetY.value = withSpring(e.translationY + y);
-          handleTile(0, e.translationY, direction);
+          handleSwipeUpdate(0, e.translationY, direction);
         }
       }
     })
@@ -215,11 +209,11 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
         if (e.translationX > 20) {
           xPosition = x + 40;
           offsetX.value = withSpring(xPosition);
-          handleTile(40, 0, 'right');
+          handleSwipeUpdate(40, 0, 'right');
         } else if (e.translationX < 20 && e.translationX > 0) {
           xPosition = x;
           offsetX.value = withSpring(xPosition);
-          handleTile(0, 0, 'right');
+          handleSwipeUpdate(0, 0, 'right');
         }
       } else if (
         direction === 'left' &&
@@ -228,48 +222,40 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
         if (e.translationX < -20) {
           xPosition = x - 40;
           offsetX.value = withSpring(xPosition);
-          handleTile(-40, 0, 'left');
+          handleSwipeUpdate(-40, 0, 'left');
         } else if (e.translationX > -20 && e.translationX < 0) {
           xPosition = x;
           offsetX.value = withSpring(xPosition);
-          handleTile(0, 0, 'left');
+          handleSwipeUpdate(0, 0, 'left');
         }
       } else if (
         direction === 'top' &&
         Object.values(neighbours).find(neighb => neighb.direction === 'down')
       ) {
-        console.log(
-          Object.values(neighbours).find(neighb => neighb.direction === 'down'),
-          neighbours
-        );
         if (e.translationY > 20) {
           yPosition = y + 40;
           offsetY.value = withSpring(yPosition);
-          handleTile(0, 40, 'top');
+          handleSwipeUpdate(0, 40, 'top');
         } else if (e.translationY < 20 && e.translationY > 0) {
           yPosition = y;
           offsetY.value = withSpring(yPosition);
-          handleTile(0, 0, 'top');
+          handleSwipeUpdate(0, 0, 'top');
         }
       } else if (
         direction === 'down' &&
         Object.values(neighbours).find(neighb => neighb.direction === 'top')
       ) {
-        console.log(
-          Object.values(neighbours).find(neighb => neighb.direction === 'top'),
-          neighbours
-        );
         if (e.translationY < -20) {
           yPosition = y - 40;
           offsetY.value = withSpring(yPosition);
-          handleTile(0, -40, 'down');
+          handleSwipeUpdate(0, -40, 'down');
         } else if (e.translationY > -20 && e.translationY < 0) {
           yPosition = y;
           offsetY.value = withSpring(yPosition);
-          handleTile(0, 0, 'down');
+          handleSwipeUpdate(0, 0, 'down');
         }
       }
-      handleId(xPosition, yPosition);
+      handleSwipeEnd(xPosition, yPosition);
     });
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -294,7 +280,15 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
           },
           animatedStyle,
         ]}>
-        {/* <Text>{id}</Text> */}
+        <Text
+          style={[
+            styles.tileText,
+            {
+              color: borderColor,
+            },
+          ]}>
+          {id}
+        </Text>
       </Animated.View>
     </GestureDetector>
   );
