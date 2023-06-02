@@ -2,10 +2,11 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {useObservableState} from 'observable-hooks';
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {tilesSubject$, levelProperties$} from '../../utils/utils';
 import {map, tap} from 'rxjs/operators';
+import shortid from 'shortid';
 
 import Tile from '../Tile/Tile';
 import calculateNeighbourTiles from '../../utils/calculateNeighbourTiles';
@@ -14,14 +15,6 @@ const CELL_SIZE = 40;
 
 type ColorType = {
   [key: string]: string;
-};
-
-export type SquareType = {
-  row: number;
-  column: number;
-  x: number;
-  y: number;
-  id: string;
 };
 
 const colors: ColorType = {
@@ -63,33 +56,50 @@ export interface IFieldProps {
 }
 
 const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call
-  const tilesArr = useObservableState(tilesSubject$, []);
+  const [tilesArr, setTilesArr] = useState<
+    {
+      id: string;
+      x: number;
+      y: number;
+      color: string;
+      position: number;
+      neighbours: {
+        [key: number]: {
+          id: string;
+          x: number;
+          y: number;
+          color: string;
+          position: number;
+          direction: string;
+        };
+      };
+    }[]
+  >([]);
 
   useEffect(() => {
-    const tilesSubscription = tilesSubject$
-      .pipe(
-        map(subedTiles => {
-          return subedTiles.forEach((til, index) => {
-            const updTile = {
-              ...til,
-              id: index,
-            };
-            const neighbours = calculateNeighbourTiles(
-              columns,
-              rows,
-              updTile,
-              columns * rows,
-              CELL_SIZE
-            );
-            return {
-              ...til,
-              neighbours: neighbours,
-            };
-          });
-        })
-      )
-      .subscribe();
+    const tilesSubscription = tilesSubject$.subscribe(subedTiles => {
+      const updatedTiles = subedTiles.map((til, index) => {
+        if (til.position === 14) {
+          console.log(til.x, til.y);
+        }
+        const updTile = {
+          ...til,
+          position: index,
+        };
+        const neighbours = calculateNeighbourTiles(
+          columns,
+          rows,
+          updTile,
+          columns * rows,
+          CELL_SIZE
+        );
+        return {
+          ...updTile,
+          neighbours: neighbours,
+        };
+      });
+      setTilesArr(updatedTiles);
+    });
     const levelSubscription = levelProperties$.subscribe();
 
     return () => {
@@ -108,10 +118,11 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
       const lastColumnTileNumber = column * rows;
 
       let tile = {
-        id: index,
+        id: shortid.generate(),
         color,
         x: 0,
         y: 0,
+        position: index,
       };
       if (index < lastColumnTileNumber) {
         tile = {
@@ -153,6 +164,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
             x={tile.x}
             y={tile.y}
             neighbours={tile.neighbours}
+            position={tile.position}
           />
         );
       })}

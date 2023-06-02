@@ -25,19 +25,21 @@ const styles = StyleSheet.create({
     borderStyle: 'solid',
   },
   tileText: {
+    fontSize: 8,
     fontWeight: 'bold',
   },
 });
 
 export interface ITile {
   color: string;
-  id: number;
+  id: string;
   x: number;
   y: number;
+  position: number;
   neighbours: NeightbourTilesType;
 }
 
-const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
+const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
   const offsetX = useSharedValue(x);
   const offsetY = useSharedValue(y);
 
@@ -58,8 +60,8 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
     const subSelectedTiles = selectedTilesSubject$
       .pipe(
         tap(tile => {
-          if (neighbours[tile.id]) {
-            if (neighbours[tile.id].direction === tile.dir) {
+          if (neighbours[tile.position]) {
+            if (neighbours[tile.position].direction === tile.dir) {
               offsetX.value = withSpring(x - tile.x);
               offsetY.value = withSpring(y - tile.y);
             }
@@ -75,17 +77,22 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
   }, [id, neighbours, offsetX, offsetY]);
 
   const subscriber = (xValue: number, yValue: number) => {
+    const changedTile = Object.values(neighbours).find(
+      tile => tile.x === xValue && tile.y === yValue
+    );
+    const changedTileIndex = tilesSubject$.value.findIndex(
+      tile => tile.id === changedTile?.id
+    );
     const filtered = tilesSubject$.value.filter(tile => tile.id !== id);
-    tilesSubject$.next([
-      ...filtered,
-      {
-        id,
-        color,
-        x: xValue,
-        y: yValue,
-        neighbours,
-      },
-    ]);
+    filtered.splice(changedTileIndex, 0, {
+      id,
+      color,
+      position,
+      x: xValue,
+      y: yValue,
+      neighbours,
+    });
+    tilesSubject$.next(filtered);
   };
 
   const handleSwipeEnd = (xValue: number, yValue: number) => {
@@ -95,11 +102,25 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours}) => {
   };
 
   const subscriberTile = (xValue: number, yValue: number, dir: string) => {
-    selectedTilesSubject$.next({x: xValue, y: yValue, id, color, dir});
+    selectedTilesSubject$.next({
+      x: xValue,
+      y: yValue,
+      position,
+      id,
+      color,
+      dir,
+    });
   };
 
   const resetTile = () => {
-    selectedTilesSubject$.next({id: 0, x: 0, y: 0, color: '', dir: ''});
+    selectedTilesSubject$.next({
+      id: '',
+      x: 0,
+      y: 0,
+      position: 0,
+      color: '',
+      dir: '',
+    });
   };
 
   const handleSwipeUpdate = (xValue: number, yValue: number, dir: string) => {

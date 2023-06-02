@@ -2,30 +2,34 @@ import {BehaviorSubject} from 'rxjs';
 
 export const tilesSubject$ = new BehaviorSubject<
   {
-    id: number;
+    id: string;
+    position: number;
     x: number;
     y: number;
     color: string;
     neighbours: {
       [key: number]: {
-        id: number;
+        id: string;
         x: number;
         y: number;
         color: string;
         direction: string;
+        position: number;
       };
     };
   }[]
 >([]);
 
 export const selectedTilesSubject$ = new BehaviorSubject<{
-  id: number;
+  id: string;
+  position: number;
   x: number;
   y: number;
   color: string;
   dir: string;
 }>({
-  id: 0,
+  id: '',
+  position: 0,
   x: 0,
   y: 0,
   color: '',
@@ -36,9 +40,10 @@ export const levelProperties$ = new BehaviorSubject<{
   level: number;
   counter: number;
   tiles: {
-    id: number;
+    id: string;
     x: number;
     y: number;
+    position: number;
     color: string;
     active: boolean;
   }[];
