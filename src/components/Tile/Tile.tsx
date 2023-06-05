@@ -44,14 +44,14 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
   const offsetY = useSharedValue(y);
 
   let borderColor;
-  if (color === '#fefd42') {
-    borderColor = '#FFAC4D';
-  } else if (color === '#00F1FF') {
-    borderColor = '#395789';
-  } else if (color === '#FF4365') {
-    borderColor = '#8c221d';
-  } else if (color === '#fff') {
-    borderColor = '#ccc';
+  if (color === '#FFAC4D') {
+    borderColor = '#fefd42';
+  } else if (color === '#395789') {
+    borderColor = '#00F1FF';
+  } else if (color === '#8c221d') {
+    borderColor = '#FF4365';
+  } else if (color === '#ccc') {
+    borderColor = '#fff';
   }
 
   useEffect(() => {
@@ -76,29 +76,43 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
     };
   }, [id, neighbours, offsetX, offsetY]);
 
-  const subscriber = (xValue: number, yValue: number) => {
+  const subscriber = (xValue: number, yValue: number, tPosition: number) => {
     const changedTile = Object.values(neighbours).find(
       tile => tile.x === xValue && tile.y === yValue
     );
-    const changedTileIndex = tilesSubject$.value.findIndex(
+    const filtered = tilesSubject$.value.filter(
+      tile => tile.id !== id && tile.id !== changedTile?.id
+    );
+    const fullChangedTile = tilesSubject$.value.find(
       tile => tile.id === changedTile?.id
     );
-    const filtered = tilesSubject$.value.filter(tile => tile.id !== id);
-    filtered.splice(changedTileIndex, 0, {
+    // console.log('TILES', tilesSubject$.value);
+    // console.log(fullChangedTile, changedTile);
+    filtered.splice(fullChangedTile?.position, 0, {
       id,
       color,
-      position,
+      position: fullChangedTile?.position,
       x: xValue,
       y: yValue,
       neighbours,
     });
+    // filtered.splice(position, 0, {
+    //   ...fullChangedTile,
+    //   x: x,
+    //   y: y,
+    //   position: position,
+    // });
     tilesSubject$.next(filtered);
   };
 
-  const handleSwipeEnd = (xValue: number, yValue: number) => {
+  const handleSwipeEnd = (
+    xValue: number,
+    yValue: number,
+    tPosition: number
+  ) => {
     'worklet';
 
-    runOnJS(subscriber)(xValue, yValue);
+    runOnJS(subscriber)(xValue, yValue, tPosition);
   };
 
   const subscriberTile = (xValue: number, yValue: number, dir: string) => {
@@ -276,7 +290,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
           handleSwipeUpdate(0, 0, 'down');
         }
       }
-      handleSwipeEnd(xPosition, yPosition);
+      handleSwipeEnd(xPosition, yPosition, position);
     });
 
   const animatedStyle = useAnimatedStyle(() => ({

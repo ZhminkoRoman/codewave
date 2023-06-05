@@ -18,10 +18,10 @@ type ColorType = {
 };
 
 const colors: ColorType = {
-  '1': '#FF4365',
-  '2': '#00F1FF',
-  '3': '#fefd42',
-  '4': '#fff',
+  '1': '#8c221d',
+  '2': '#395789',
+  '3': '#FFAC4D',
+  '4': '#ccc',
 };
 
 // #66dbd9;
@@ -78,27 +78,20 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
 
   useEffect(() => {
     const tilesSubscription = tilesSubject$.subscribe(subedTiles => {
-      const updatedTiles = subedTiles.map((til, index) => {
-        if (til.position === 14) {
-          console.log(til.x, til.y);
-        }
-        const updTile = {
-          ...til,
-          position: index,
-        };
-        const neighbours = calculateNeighbourTiles(
-          columns,
-          rows,
-          updTile,
-          columns * rows,
-          CELL_SIZE
-        );
-        return {
-          ...updTile,
-          neighbours: neighbours,
-        };
-      });
-      setTilesArr(updatedTiles);
+      // const updatedTiles = subedTiles.map((til, index) => {
+      //   const neighbours = calculateNeighbourTiles(
+      //     columns,
+      //     rows,
+      //     til,
+      //     columns * rows,
+      //     CELL_SIZE
+      //   );
+      //   return {
+      //     ...til,
+      //     neighbours: neighbours,
+      //   };
+      // });
+      setTilesArr(subedTiles);
     });
     const levelSubscription = levelProperties$.subscribe();
 
@@ -115,7 +108,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
         column += 1;
       }
       const color = setRandomColor();
-      const lastColumnTileNumber = column * rows;
+      const lastColumnTileNumber = column * rows - 1;
 
       let tile = {
         id: shortid.generate(),
@@ -124,11 +117,11 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
         y: 0,
         position: index,
       };
-      if (index < lastColumnTileNumber) {
+      if (index <= lastColumnTileNumber) {
         tile = {
           ...tile,
           x: (column - 1) * CELL_SIZE,
-          y: (lastColumnTileNumber - index - 1) * CELL_SIZE,
+          y: (lastColumnTileNumber - index) * CELL_SIZE,
         };
       }
       const neighbours = calculateNeighbourTiles(
@@ -138,12 +131,17 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
         columns * rows,
         CELL_SIZE
       );
+      if (tile.position === 15) {
+        console.log(neighbours);
+      }
       return {
         ...tile,
         neighbours: neighbours,
       };
     });
   }, [columns, rows, tilesCount]);
+
+  // console.log(tiles);
 
   useEffect(() => {
     tilesSubject$.next(tiles);

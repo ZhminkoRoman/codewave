@@ -31,6 +31,7 @@ const calculateNeighbourTiles = (
       const firstColumnTileNumber = lastColumnTileNumber - rows + 1;
       const leftTileNumber = tile.position - rows;
       const rightTileNumber = tile.position + rows;
+      //!: issue with ID calculating :!
       if (tile.position < lastColumnTileNumber) {
         neighbourTiles[tile.position + 1] = {
           id: tile.id,
