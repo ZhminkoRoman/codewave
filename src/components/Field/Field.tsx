@@ -17,6 +17,26 @@ type ColorType = {
   [key: string]: string;
 };
 
+type TilesObj = {
+  [key: number]: {
+    id: string;
+    position: number;
+    x: number;
+    y: number;
+    color: string;
+    neighbours: {
+      [key: number]: {
+        id: string;
+        x: number;
+        y: number;
+        color: string;
+        direction: string;
+        position: number;
+      };
+    };
+  };
+};
+
 const colors: ColorType = {
   '1': '#8c221d',
   '2': '#395789',
@@ -103,8 +123,9 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
 
   const tiles = useMemo(() => {
     let column = 1;
-    return Array.from({length: tilesCount}, (_, index) => {
-      if (index >= column * columns) {
+    const obj: TilesObj = {};
+    for (let i = 0; i < tilesCount; i++) {
+      if (i >= column * columns) {
         column += 1;
       }
       const color = setRandomColor();
@@ -115,37 +136,33 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
         color,
         x: 0,
         y: 0,
-        position: index,
+        position: i,
+        neighbours: {},
       };
-      if (index <= lastColumnTileNumber) {
+      if (i <= lastColumnTileNumber) {
         tile = {
           ...tile,
           x: (column - 1) * CELL_SIZE,
-          y: (lastColumnTileNumber - index) * CELL_SIZE,
+          y: (lastColumnTileNumber - i) * CELL_SIZE,
         };
       }
-      const neighbours = calculateNeighbourTiles(
-        columns,
-        rows,
-        tile,
-        columns * rows,
-        CELL_SIZE
-      );
-      if (tile.position === 15) {
-        console.log(neighbours);
-      }
-      return {
-        ...tile,
-        neighbours: neighbours,
-      };
-    });
+      obj[i] = tile;
+    }
+    return obj;
   }, [columns, rows, tilesCount]);
 
   // console.log(tiles);
 
   useEffect(() => {
-    tilesSubject$.next(tiles);
-  }, [tiles]);
+    const updatedTiles = calculateNeighbourTiles(
+      columns,
+      rows,
+      tiles,
+      columns * rows,
+      CELL_SIZE
+    );
+    tilesSubject$.next(updatedTiles);
+  }, [columns, rows, tiles]);
 
   return (
     <View
