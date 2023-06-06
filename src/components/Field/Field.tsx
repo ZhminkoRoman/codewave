@@ -98,20 +98,15 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
 
   useEffect(() => {
     const tilesSubscription = tilesSubject$.subscribe(subedTiles => {
-      // const updatedTiles = subedTiles.map((til, index) => {
-      //   const neighbours = calculateNeighbourTiles(
-      //     columns,
-      //     rows,
-      //     til,
-      //     columns * rows,
-      //     CELL_SIZE
-      //   );
-      //   return {
-      //     ...til,
-      //     neighbours: neighbours,
-      //   };
-      // });
-      setTilesArr(subedTiles);
+      const val = Object.values(subedTiles);
+      const updatedTiles = calculateNeighbourTiles(
+        columns,
+        rows,
+        val,
+        columns * rows,
+        CELL_SIZE
+      );
+      setTilesArr(updatedTiles);
     });
     const levelSubscription = levelProperties$.subscribe();
 
@@ -121,7 +116,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
     };
   }, [columns, rows]);
 
-  const tiles = useMemo(() => {
+  useEffect(() => {
     let column = 1;
     const obj: TilesObj = {};
     for (let i = 0; i < tilesCount; i++) {
@@ -148,21 +143,15 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
       }
       obj[i] = tile;
     }
-    return obj;
-  }, [columns, rows, tilesCount]);
-
-  // console.log(tiles);
-
-  useEffect(() => {
     const updatedTiles = calculateNeighbourTiles(
       columns,
       rows,
-      tiles,
+      obj,
       columns * rows,
       CELL_SIZE
     );
     tilesSubject$.next(updatedTiles);
-  }, [columns, rows, tiles]);
+  }, [columns, rows, tilesCount]);
 
   return (
     <View

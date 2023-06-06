@@ -61,7 +61,11 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       .pipe(
         tap(tile => {
           if (neighbours[tile.position]) {
+            console.log(1, x, tile.x);
+            console.log(y, tile.y);
             if (neighbours[tile.position].direction === tile.dir) {
+              console.log(2, x, tile.x);
+              console.log(y, tile.y);
               offsetX.value = withSpring(x - tile.x);
               offsetY.value = withSpring(y - tile.y);
             }
@@ -80,29 +84,40 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
     const changedTile = Object.values(neighbours).find(
       tile => tile.x === xValue && tile.y === yValue
     );
-    const filtered = tilesSubject$.value.filter(
-      tile => tile.id !== id && tile.id !== changedTile?.id
-    );
     const fullChangedTile = tilesSubject$.value.find(
       tile => tile.id === changedTile?.id
     );
-    // console.log('TILES', tilesSubject$.value);
-    // console.log(fullChangedTile, changedTile);
-    filtered.splice(fullChangedTile?.position, 0, {
-      id,
-      color,
-      position: fullChangedTile?.position,
-      x: xValue,
-      y: yValue,
-      neighbours,
-    });
-    // filtered.splice(position, 0, {
-    //   ...fullChangedTile,
-    //   x: x,
-    //   y: y,
-    //   position: position,
-    // });
-    tilesSubject$.next(filtered);
+
+    if (fullChangedTile && changedTile) {
+      const filtered = tilesSubject$.value.filter(
+        tile => tile.id !== id && tile.id !== changedTile?.id
+      );
+
+      filtered.splice(position, 0, {
+        ...fullChangedTile,
+        x: x,
+        y: y,
+        position: position,
+      });
+      filtered.splice(fullChangedTile?.position, 0, {
+        id,
+        color,
+        position: fullChangedTile?.position,
+        x: xValue,
+        y: yValue,
+        neighbours,
+      });
+
+      tilesSubject$.next(filtered);
+      selectedTilesSubject$.next({
+        id: '',
+        x: 0,
+        y: 0,
+        position: 0,
+        color: '',
+        dir: '',
+      });
+    }
   };
 
   const handleSwipeEnd = (

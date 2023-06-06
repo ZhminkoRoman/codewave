@@ -44,55 +44,60 @@ const calculateNeighbourTiles = (
   totalTiles: number,
   cellSize: number
 ) => {
+  let column = 1;
   return Object.values(tiles).map(tile => {
     const neighbourTiles: NeightbourTilesType = {};
-    for (let column = 1; column <= columns; column++) {
-      const lastColumnTileNumber = column * rows - 1;
-      if (tile.position <= lastColumnTileNumber) {
-        const firstColumnTileNumber = lastColumnTileNumber - rows + 1;
-        const leftTileNumber = tile.position - rows;
-        const rightTileNumber = tile.position + rows;
-        if (tile.position < lastColumnTileNumber) {
-          neighbourTiles[tile.position + 1] = {
-            id: tiles[tile.position + 1].id,
-            position: tile.position + 1,
-            x: tile.x,
-            y: tile.y - cellSize,
-            color: tile.color,
-            direction: 'top',
-          };
-        }
-        if (tile.position > firstColumnTileNumber) {
-          neighbourTiles[tile.position - 1] = {
-            id: tiles[tile.position - 1].id,
-            position: tile.position - 1,
-            x: tile.x,
-            y: tile.y + cellSize,
-            color: tile.color,
-            direction: 'down',
-          };
-        }
-        if (leftTileNumber > 0) {
-          neighbourTiles[leftTileNumber] = {
-            id: tiles[leftTileNumber].id,
-            position: leftTileNumber,
-            x: tile.x - cellSize,
-            y: tile.y,
-            color: tile.color,
-            direction: 'right',
-          };
-        }
-        if (rightTileNumber < totalTiles) {
-          neighbourTiles[rightTileNumber] = {
-            id: tiles[rightTileNumber].id,
-            position: rightTileNumber,
-            x: tile.x + cellSize,
-            y: tile.y,
-            color: tile.color,
-            direction: 'left',
-          };
-        }
+    if (tile.position > column * columns - 1) {
+      column = column + 1;
+    }
+    const lastColumnTileNumber = column * rows - 1;
+    if (tile.position <= lastColumnTileNumber) {
+      const firstColumnTileNumber = lastColumnTileNumber - rows + 1;
+      const leftTileNumber = tile.position - rows;
+      const rightTileNumber = tile.position + rows;
+      if (tile.position < lastColumnTileNumber) {
+        neighbourTiles[tile.position + 1] = {
+          id: tiles[tile.position + 1].id,
+          position: tile.position + 1,
+          x: tile.x,
+          y: tile.y - cellSize,
+          color: tile.color,
+          direction: 'top',
+        };
       }
+      if (tile.position > firstColumnTileNumber) {
+        neighbourTiles[tile.position - 1] = {
+          id: tiles[tile.position - 1].id,
+          position: tile.position - 1,
+          x: tile.x,
+          y: tile.y + cellSize,
+          color: tile.color,
+          direction: 'down',
+        };
+      }
+      if (leftTileNumber > 0) {
+        neighbourTiles[leftTileNumber] = {
+          id: tiles[leftTileNumber].id,
+          position: leftTileNumber,
+          x: tile.x - cellSize,
+          y: tile.y,
+          color: tile.color,
+          direction: 'right',
+        };
+      }
+      if (rightTileNumber < totalTiles) {
+        neighbourTiles[rightTileNumber] = {
+          id: tiles[rightTileNumber].id,
+          position: rightTileNumber,
+          x: tile.x + cellSize,
+          y: tile.y,
+          color: tile.color,
+          direction: 'left',
+        };
+      }
+    }
+    if (tile.position === 9) {
+      // console.log(tile.position, neighbourTiles);
     }
     return {
       ...tile,
