@@ -27,6 +27,8 @@ const styles = StyleSheet.create({
   tileText: {
     fontSize: 8,
     fontWeight: 'bold',
+    textAlign: 'center',
+    overflow: 'hidden',
   },
 });
 
@@ -61,11 +63,9 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       .pipe(
         tap(tile => {
           if (neighbours[tile.position]) {
-            console.log(1, x, tile.x);
-            console.log(y, tile.y);
+            // console.log(neighbours[tile.position], tile.dir, tile.position);
             if (neighbours[tile.position].direction === tile.dir) {
-              console.log(2, x, tile.x);
-              console.log(y, tile.y);
+              // console.log(position, x - tile.x, y - tile.y);
               offsetX.value = withSpring(x - tile.x);
               offsetY.value = withSpring(y - tile.y);
             }
@@ -87,26 +87,42 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
     const fullChangedTile = tilesSubject$.value.find(
       tile => tile.id === changedTile?.id
     );
-
     if (fullChangedTile && changedTile) {
       const filtered = tilesSubject$.value.filter(
         tile => tile.id !== id && tile.id !== changedTile?.id
       );
 
-      filtered.splice(position, 0, {
-        ...fullChangedTile,
-        x: x,
-        y: y,
-        position: position,
-      });
-      filtered.splice(fullChangedTile?.position, 0, {
-        id,
-        color,
-        position: fullChangedTile?.position,
-        x: xValue,
-        y: yValue,
-        neighbours,
-      });
+      if (fullChangedTile?.position < position) {
+        filtered.splice(fullChangedTile?.position, 0, {
+          id,
+          color,
+          position: fullChangedTile?.position,
+          x: xValue,
+          y: yValue,
+          neighbours,
+        });
+        filtered.splice(position, 0, {
+          ...fullChangedTile,
+          x: x,
+          y: y,
+          position: position,
+        });
+      } else {
+        filtered.splice(position, 0, {
+          ...fullChangedTile,
+          x: x,
+          y: y,
+          position: position,
+        });
+        filtered.splice(fullChangedTile?.position, 0, {
+          id,
+          color,
+          position: fullChangedTile?.position,
+          x: xValue,
+          y: yValue,
+          neighbours,
+        });
+      }
 
       tilesSubject$.next(filtered);
       selectedTilesSubject$.next({

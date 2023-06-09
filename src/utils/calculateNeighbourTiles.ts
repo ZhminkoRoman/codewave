@@ -75,7 +75,7 @@ const calculateNeighbourTiles = (
           direction: 'down',
         };
       }
-      if (leftTileNumber > 0) {
+      if (leftTileNumber >= 0) {
         neighbourTiles[leftTileNumber] = {
           id: tiles[leftTileNumber].id,
           position: leftTileNumber,
@@ -95,9 +95,6 @@ const calculateNeighbourTiles = (
           direction: 'left',
         };
       }
-    }
-    if (tile.position === 9) {
-      // console.log(tile.position, neighbourTiles);
     }
     return {
       ...tile,
