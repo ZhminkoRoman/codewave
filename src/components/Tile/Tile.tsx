@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useMemo} from 'react';
 import {StyleSheet, Text} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
@@ -45,29 +45,33 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
   const offsetX = useSharedValue(x);
   const offsetY = useSharedValue(y);
 
-  let borderColor;
-  if (color === '#FFAC4D') {
-    borderColor = '#fefd42';
-  } else if (color === '#395789') {
-    borderColor = '#00F1FF';
-  } else if (color === '#8c221d') {
-    borderColor = '#FF4365';
-  } else if (color === '#ccc') {
-    borderColor = '#fff';
-  }
+  const borderColor = useMemo(() => {
+    if (color === '#FFAC4D') {
+      return '#fefd42';
+    } else if (color === '#395789') {
+      return '#00F1FF';
+    } else if (color === '#8c221d') {
+      return '#FF4365';
+    } else if (color === '#ccc') {
+      return '#fff';
+    }
+  }, [color]);
+
+  const springOptions = useMemo(() => {
+    return {
+      damping: 15,
+      stiffness: 75,
+    };
+  }, []);
 
   useEffect(() => {
-    const subSelectedTile = tilesSubject$.subscribe();
-
     const subSelectedTiles = selectedTilesSubject$
       .pipe(
         tap(tile => {
           if (neighbours[tile.position]) {
-            // console.log(neighbours[tile.position], tile.dir, tile.position);
             if (neighbours[tile.position].direction === tile.dir) {
-              // console.log(position, x - tile.x, y - tile.y);
-              offsetX.value = withSpring(x - tile.x);
-              offsetY.value = withSpring(y - tile.y);
+              offsetX.value = withSpring(x - tile.x, springOptions);
+              offsetY.value = withSpring(y - tile.y, springOptions);
             }
           }
         })
@@ -75,12 +79,11 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       .subscribe();
 
     return () => {
-      subSelectedTile.unsubscribe();
       subSelectedTiles.unsubscribe();
     };
-  }, [id, neighbours, offsetX, offsetY]);
+  }, [id, neighbours, offsetX, offsetY, springOptions, x, y]);
 
-  const subscriber = (xValue: number, yValue: number, tPosition: number) => {
+  const subscriber = (xValue: number, yValue: number) => {
     const changedTile = Object.values(neighbours).find(
       tile => tile.x === xValue && tile.y === yValue
     );
@@ -136,14 +139,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
     }
   };
 
-  const handleSwipeEnd = (
-    xValue: number,
-    yValue: number,
-    tPosition: number
-  ) => {
+  const handleSwipeEnd = (xValue: number, yValue: number) => {
     'worklet';
 
-    runOnJS(subscriber)(xValue, yValue, tPosition);
+    runOnJS(subscriber)(xValue, yValue);
   };
 
   const subscriberTile = (xValue: number, yValue: number, dir: string) => {
@@ -181,8 +180,6 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
   };
 
   const gestureHandler = Gesture.Pan()
-    .activeOffsetX([-20, 20])
-    .activeOffsetY([-20, 20])
     .onStart(() => {
       handleReset();
     })
@@ -210,7 +207,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
           e.translationX <= 40 &&
           e.translationX >= -40
         ) {
-          offsetX.value = withSpring(e.translationX + x);
+          offsetX.value = withSpring(e.translationX + x, springOptions);
           handleSwipeUpdate(e.translationX, 0, direction);
         }
       } else if (
@@ -222,7 +219,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
           e.translationX <= 40 &&
           e.translationX >= -40
         ) {
-          offsetX.value = withSpring(e.translationX + x);
+          offsetX.value = withSpring(e.translationX + x, springOptions);
           handleSwipeUpdate(e.translationX, 0, direction);
         }
       } else if (
@@ -234,7 +231,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
           e.translationY <= 40 &&
           e.translationY >= -40
         ) {
-          offsetY.value = withSpring(e.translationY + y);
+          offsetY.value = withSpring(e.translationY + y, springOptions);
           handleSwipeUpdate(0, e.translationY, direction);
         }
       } else if (
@@ -246,7 +243,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
           e.translationY <= 40 &&
           e.translationY >= -40
         ) {
-          offsetY.value = withSpring(e.translationY + y);
+          offsetY.value = withSpring(e.translationY + y, springOptions);
           handleSwipeUpdate(0, e.translationY, direction);
         }
       }
@@ -272,56 +269,56 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         direction === 'right' &&
         Object.values(neighbours).find(neighb => neighb.direction === 'left')
       ) {
-        if (e.translationX > 20) {
+        if (e.translationX >= 20) {
           xPosition = x + 40;
-          offsetX.value = withSpring(xPosition);
+          offsetX.value = withSpring(xPosition, springOptions);
           handleSwipeUpdate(40, 0, 'right');
         } else if (e.translationX < 20 && e.translationX > 0) {
           xPosition = x;
-          offsetX.value = withSpring(xPosition);
+          offsetX.value = withSpring(xPosition, springOptions);
           handleSwipeUpdate(0, 0, 'right');
         }
       } else if (
         direction === 'left' &&
         Object.values(neighbours).find(neighb => neighb.direction === 'right')
       ) {
-        if (e.translationX < -20) {
+        if (e.translationX <= -20) {
           xPosition = x - 40;
-          offsetX.value = withSpring(xPosition);
+          offsetX.value = withSpring(xPosition, springOptions);
           handleSwipeUpdate(-40, 0, 'left');
         } else if (e.translationX > -20 && e.translationX < 0) {
           xPosition = x;
-          offsetX.value = withSpring(xPosition);
+          offsetX.value = withSpring(xPosition, springOptions);
           handleSwipeUpdate(0, 0, 'left');
         }
       } else if (
         direction === 'top' &&
         Object.values(neighbours).find(neighb => neighb.direction === 'down')
       ) {
-        if (e.translationY > 20) {
+        if (e.translationY >= 20) {
           yPosition = y + 40;
-          offsetY.value = withSpring(yPosition);
+          offsetY.value = withSpring(yPosition, springOptions);
           handleSwipeUpdate(0, 40, 'top');
         } else if (e.translationY < 20 && e.translationY > 0) {
           yPosition = y;
-          offsetY.value = withSpring(yPosition);
+          offsetY.value = withSpring(yPosition, springOptions);
           handleSwipeUpdate(0, 0, 'top');
         }
       } else if (
         direction === 'down' &&
         Object.values(neighbours).find(neighb => neighb.direction === 'top')
       ) {
-        if (e.translationY < -20) {
+        if (e.translationY <= -20) {
           yPosition = y - 40;
-          offsetY.value = withSpring(yPosition);
+          offsetY.value = withSpring(yPosition, springOptions);
           handleSwipeUpdate(0, -40, 'down');
         } else if (e.translationY > -20 && e.translationY < 0) {
           yPosition = y;
-          offsetY.value = withSpring(yPosition);
+          offsetY.value = withSpring(yPosition, springOptions);
           handleSwipeUpdate(0, 0, 'down');
         }
       }
-      handleSwipeEnd(xPosition, yPosition, position);
+      handleSwipeEnd(xPosition, yPosition);
     });
 
   const animatedStyle = useAnimatedStyle(() => ({

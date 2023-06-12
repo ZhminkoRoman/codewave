@@ -10,6 +10,7 @@ import shortid from 'shortid';
 
 import Tile from '../Tile/Tile';
 import calculateNeighbourTiles from '../../utils/calculateNeighbourTiles';
+import matchTiles from '../../utils/matchTiles';
 
 const CELL_SIZE = 40;
 
@@ -97,17 +98,21 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
   >([]);
 
   useEffect(() => {
-    const tilesSubscription = tilesSubject$.subscribe(subedTiles => {
-      const val = Object.values(subedTiles);
-      const updatedTiles = calculateNeighbourTiles(
-        columns,
-        rows,
-        val,
-        columns * rows,
-        CELL_SIZE
-      );
-      setTilesArr(updatedTiles);
-    });
+    const tilesSubscription = tilesSubject$
+      .pipe(
+        tap(subedTiles => {
+          const val = Object.values(subedTiles);
+          const updatedTiles = calculateNeighbourTiles(
+            columns,
+            rows,
+            val,
+            columns * rows,
+            CELL_SIZE
+          );
+          setTilesArr(updatedTiles);
+        })
+      )
+      .subscribe();
     const levelSubscription = levelProperties$.subscribe();
 
     return () => {
@@ -153,12 +158,16 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
     tilesSubject$.next(updatedTiles);
   }, [columns, rows, tilesCount]);
 
+  const fieldWidth = useMemo(() => {
+    return columns * CELL_SIZE + 4;
+  }, [columns]);
+
+  const fieldHeight = useMemo(() => {
+    return rows * CELL_SIZE + 4;
+  }, [rows]);
+
   return (
-    <View
-      style={[
-        styles.field,
-        {width: columns * CELL_SIZE + 4, height: rows * CELL_SIZE + 4},
-      ]}>
+    <View style={[styles.field, {width: fieldWidth, height: fieldHeight}]}>
       {tilesArr.map(tile => {
         return (
           <Tile
