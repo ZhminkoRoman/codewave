@@ -50,13 +50,6 @@ const calculateNeighbourTiles = (
     if (tile.position > column * columns - 1) {
       column = column + 1;
     }
-    if (
-      tile.position &&
-      Object.values(tile.neighbours).filter(nTile => nTile.color === tile.color)
-        .length >= 2
-    ) {
-      // console.log(tile.position);
-    }
     const lastColumnTileNumber = column * rows - 1;
     if (tile.position <= lastColumnTileNumber) {
       const firstColumnTileNumber = lastColumnTileNumber - rows + 1;

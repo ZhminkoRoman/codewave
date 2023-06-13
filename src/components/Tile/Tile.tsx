@@ -127,7 +127,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         });
       }
 
-      tilesSubject$.next(filtered);
+      // tilesSubject$.next(filtered);
       selectedTilesSubject$.next({
         id: '',
         x: 0,

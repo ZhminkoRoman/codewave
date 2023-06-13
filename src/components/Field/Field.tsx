@@ -4,7 +4,11 @@
 import {useObservableState} from 'observable-hooks';
 import React, {useEffect, useMemo, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {tilesSubject$, levelProperties$} from '../../utils/utils';
+import {
+  tilesSubject$,
+  levelProperties$,
+  selectedTilesSubject$,
+} from '../../utils/utils';
 import {map, tap} from 'rxjs/operators';
 import shortid from 'shortid';
 
