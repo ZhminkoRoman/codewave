@@ -8,8 +8,8 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {tap} from 'rxjs/operators';
-import {selectedTilesSubject$, tilesSubject$} from '../../utils/utils';
-import {NeightbourTilesType} from '../../utils/calculateNeighbourTiles';
+import {selectedTiles$, tiles$} from '../../utils/utils';
+import {NeightbourTilesType} from '../../utils/calculateNeighborTiles';
 
 const styles = StyleSheet.create({
   tile: {
@@ -65,7 +65,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
   }, []);
 
   useEffect(() => {
-    const subSelectedTiles = selectedTilesSubject$
+    const subSelectedTiles = selectedTiles$
       .pipe(
         tap(tile => {
           if (neighbours[tile.position]) {
@@ -87,11 +87,11 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
     const changedTile = Object.values(neighbours).find(
       tile => tile.x === xValue && tile.y === yValue
     );
-    const fullChangedTile = tilesSubject$.value.find(
+    const fullChangedTile = tiles$.value.find(
       tile => tile.id === changedTile?.id
     );
     if (fullChangedTile && changedTile) {
-      const filtered = tilesSubject$.value.filter(
+      const filtered = tiles$.value.filter(
         tile => tile.id !== id && tile.id !== changedTile?.id
       );
 
@@ -128,7 +128,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       }
 
       // tilesSubject$.next(filtered);
-      selectedTilesSubject$.next({
+      selectedTiles$.next({
         id: '',
         x: 0,
         y: 0,

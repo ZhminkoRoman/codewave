@@ -1,43 +1,14 @@
-type TileType = {
-  id: string;
-  x: number;
-  y: number;
-  position: number;
-  color: string;
-};
+import {ITile} from './utils';
 
 type TilesObj = {
-  [key: number]: {
-    id: string;
-    position: number;
-    x: number;
-    y: number;
-    color: string;
-    neighbours: {
-      [key: number]: {
-        id: string;
-        x: number;
-        y: number;
-        color: string;
-        direction: string;
-        position: number;
-      };
-    };
-  };
+  [key: number]: ITile;
 };
 
-export type NeightbourTilesType = {
-  [key: number]: {
-    id: string;
-    x: number;
-    y: number;
-    color: string;
-    position: number;
-    direction: string;
-  };
+export type NeighborTilesType = {
+  [key: number]: ITile;
 };
 
-const calculateNeighbourTiles = (
+const calculateNeighborTiles = (
   columns: number,
   rows: number,
   tiles: TilesObj,
@@ -46,7 +17,7 @@ const calculateNeighbourTiles = (
 ) => {
   let column = 1;
   return Object.values(tiles).map(tile => {
-    const neighbourTiles: NeightbourTilesType = {};
+    const neighborTiles: NeighborTilesType = {};
     if (tile.position > column * columns - 1) {
       column = column + 1;
     }
@@ -56,7 +27,7 @@ const calculateNeighbourTiles = (
       const leftTileNumber = tile.position - rows;
       const rightTileNumber = tile.position + rows;
       if (tile.position < lastColumnTileNumber) {
-        neighbourTiles[tile.position + 1] = {
+        neighborTiles[tile.position + 1] = {
           id: tiles[tile.position + 1].id,
           position: tile.position + 1,
           x: tile.x,
@@ -66,7 +37,7 @@ const calculateNeighbourTiles = (
         };
       }
       if (tile.position > firstColumnTileNumber) {
-        neighbourTiles[tile.position - 1] = {
+        neighborTiles[tile.position - 1] = {
           id: tiles[tile.position - 1].id,
           position: tile.position - 1,
           x: tile.x,
@@ -76,7 +47,7 @@ const calculateNeighbourTiles = (
         };
       }
       if (leftTileNumber >= 0) {
-        neighbourTiles[leftTileNumber] = {
+        neighborTiles[leftTileNumber] = {
           id: tiles[leftTileNumber].id,
           position: leftTileNumber,
           x: tile.x - cellSize,
@@ -86,7 +57,7 @@ const calculateNeighbourTiles = (
         };
       }
       if (rightTileNumber < totalTiles) {
-        neighbourTiles[rightTileNumber] = {
+        neighborTiles[rightTileNumber] = {
           id: tiles[rightTileNumber].id,
           position: rightTileNumber,
           x: tile.x + cellSize,
@@ -98,9 +69,9 @@ const calculateNeighbourTiles = (
     }
     return {
       ...tile,
-      neighbours: neighbourTiles,
+      neighbors: neighborTiles,
     };
   });
 };
 
-export default calculateNeighbourTiles;
+export default calculateNeighborTiles;

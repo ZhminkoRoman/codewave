@@ -1,47 +1,41 @@
 import {BehaviorSubject} from 'rxjs';
-import {map} from 'rxjs/operators';
+import {map, combineLatestWith} from 'rxjs/operators';
 
-export interface Tiles {
+export interface ITile {
   id: string;
   position: number;
   x: number;
   y: number;
   color: string;
-  neighbours: {
-    [key: number]: {
-      id: string;
-      x: number;
-      y: number;
-      color: string;
-      direction: string;
-      position: number;
-    };
+  direction?: string;
+  neighbors?: {
+    [key: number]: ITile;
   };
-}
-export interface Tile {
-  id: string;
-  position: number;
-  x: number;
-  y: number;
-  color: string;
-  dir: string;
+  selected?: ITile[];
 }
 
-export const tilesSubject$ = new BehaviorSubject<Tiles[]>([]);
+export const tiles$ = new BehaviorSubject<ITile[]>([]);
 
-//!: Making neighbors calculations here, not in the Field component;
-export const tilesWithNeighbors$ = tilesSubject$.pipe(
+export const tilesWithNeighbors$ = tiles$.pipe(
   map(tiles =>
     tiles.map(tile => ({
       ...tile,
-      neighbours: {},
+      neighbors: {},
     }))
   )
 );
 
-export const selectedTilesSubject$ = new BehaviorSubject<
-  Tile | Record<string, never>
->({});
+export const selectedTiles$ = new BehaviorSubject<ITile[]>([]);
+
+export const allTiles$ = tiles$.pipe(
+  combineLatestWith(selectedTiles$),
+  map(([tiles, selected]) =>
+    tiles.map(tile => ({
+      ...tile,
+      selected: selected.includes(tile),
+    }))
+  )
+);
 
 export const levelProperties$ = new BehaviorSubject<{
   level: number;

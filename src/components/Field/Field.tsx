@@ -1,20 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import {useObservableState} from 'observable-hooks';
 import React, {useEffect, useMemo, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {
-  tilesSubject$,
-  levelProperties$,
-  selectedTilesSubject$,
-} from '../../utils/utils';
-import {map, tap} from 'rxjs/operators';
+import {ITile, allTiles$, levelProperties$, tiles$} from '../../utils/utils';
+import {tap} from 'rxjs/operators';
 import shortid from 'shortid';
 
 import Tile from '../Tile/Tile';
-import calculateNeighbourTiles from '../../utils/calculateNeighbourTiles';
-import matchTiles from '../../utils/matchTiles';
+import calculateNeighborTiles from '../../utils/calculateNeighborTiles';
 
 const CELL_SIZE = 40;
 
@@ -23,23 +17,7 @@ type ColorType = {
 };
 
 type TilesObj = {
-  [key: number]: {
-    id: string;
-    position: number;
-    x: number;
-    y: number;
-    color: string;
-    neighbours: {
-      [key: number]: {
-        id: string;
-        x: number;
-        y: number;
-        color: string;
-        direction: string;
-        position: number;
-      };
-    };
-  };
+  [key: number]: ITile;
 };
 
 const colors: ColorType = {
@@ -81,32 +59,14 @@ export interface IFieldProps {
 }
 
 const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
-  const [tilesArr, setTilesArr] = useState<
-    {
-      id: string;
-      x: number;
-      y: number;
-      color: string;
-      position: number;
-      neighbours: {
-        [key: number]: {
-          id: string;
-          x: number;
-          y: number;
-          color: string;
-          position: number;
-          direction: string;
-        };
-      };
-    }[]
-  >([]);
+  const [tilesArr, setTilesArr] = useState<ITile[]>([]);
 
   useEffect(() => {
-    const tilesSubscription = tilesSubject$
+    const tilesSubscription = allTiles$
       .pipe(
         tap(subedTiles => {
           const val = Object.values(subedTiles);
-          const updatedTiles = calculateNeighbourTiles(
+          const updatedTiles = calculateNeighborTiles(
             columns,
             rows,
             val,
@@ -141,7 +101,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
         x: 0,
         y: 0,
         position: i,
-        neighbours: {},
+        neighbors: {},
       };
       if (i <= lastColumnTileNumber) {
         tile = {
@@ -152,14 +112,14 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
       }
       obj[i] = tile;
     }
-    const updatedTiles = calculateNeighbourTiles(
+    const updatedTiles = calculateNeighborTiles(
       columns,
       rows,
       obj,
       columns * rows,
       CELL_SIZE
     );
-    tilesSubject$.next(updatedTiles);
+    tiles$.next(updatedTiles);
   }, [columns, rows, tilesCount]);
 
   const fieldWidth = useMemo(() => {
@@ -180,7 +140,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
             id={tile.id}
             x={tile.x}
             y={tile.y}
-            neighbours={tile.neighbours}
+            neighbours={tile.neighbors}
             position={tile.position}
           />
         );
