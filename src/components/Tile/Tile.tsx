@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import {tap} from 'rxjs/operators';
 import {selectedTiles$, tiles$} from '../../utils/utils';
-import {NeightbourTilesType} from '../../utils/calculateNeighborTiles';
+import {NeighborTilesType} from '../../utils/calculateNeighborTiles';
 
 const styles = StyleSheet.create({
   tile: {
@@ -38,10 +38,10 @@ export interface ITile {
   x: number;
   y: number;
   position: number;
-  neighbours: NeightbourTilesType;
+  neighbors?: NeighborTilesType;
 }
 
-const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
+const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
   const offsetX = useSharedValue(x);
   const offsetY = useSharedValue(y);
 
@@ -66,25 +66,28 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
 
   useEffect(() => {
     const subSelectedTiles = selectedTiles$
-      .pipe(
-        tap(tile => {
-          if (neighbours[tile.position]) {
-            if (neighbours[tile.position].direction === tile.dir) {
-              offsetX.value = withSpring(x - tile.x, springOptions);
-              offsetY.value = withSpring(y - tile.y, springOptions);
-            }
-          }
-        })
-      )
+      .pipe
+      // tap(tiles => {
+      //   if (tiles && neighbors && neighbors[tile?.position]) {
+      //     if (neighbors[tile.position].direction === tile.dir) {
+      //       offsetX.value = withSpring(x - tile.x, springOptions);
+      //       offsetY.value = withSpring(y - tile.y, springOptions);
+      //     }
+      //   }
+      // })
+      ()
       .subscribe();
 
     return () => {
       subSelectedTiles.unsubscribe();
     };
-  }, [id, neighbours, offsetX, offsetY, springOptions, x, y]);
+  }, [id, neighbors, offsetX, offsetY, springOptions, x, y]);
 
   const subscriber = (xValue: number, yValue: number) => {
-    const changedTile = Object.values(neighbours).find(
+    if (!neighbors) {
+      return;
+    }
+    const changedTile = Object.values(neighbors).find(
       tile => tile.x === xValue && tile.y === yValue
     );
     const fullChangedTile = tiles$.value.find(
@@ -102,7 +105,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
           position: fullChangedTile?.position,
           x: xValue,
           y: yValue,
-          neighbours,
+          neighbors,
         });
         filtered.splice(position, 0, {
           ...fullChangedTile,
@@ -123,19 +126,12 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
           position: fullChangedTile?.position,
           x: xValue,
           y: yValue,
-          neighbours,
+          neighbors,
         });
       }
 
       // tilesSubject$.next(filtered);
-      selectedTiles$.next({
-        id: '',
-        x: 0,
-        y: 0,
-        position: 0,
-        color: '',
-        dir: '',
-      });
+      selectedTiles$.next([]);
     }
   };
 
@@ -146,25 +142,20 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
   };
 
   const subscriberTile = (xValue: number, yValue: number, dir: string) => {
-    selectedTilesSubject$.next({
-      x: xValue,
-      y: yValue,
-      position,
-      id,
-      color,
-      dir,
-    });
+    selectedTiles$.next([
+      {
+        x: xValue,
+        y: yValue,
+        position,
+        id,
+        color,
+        direction: dir,
+      },
+    ]);
   };
 
   const resetTile = () => {
-    selectedTilesSubject$.next({
-      id: '',
-      x: 0,
-      y: 0,
-      position: 0,
-      color: '',
-      dir: '',
-    });
+    selectedTiles$.next([]);
   };
 
   const handleSwipeUpdate = (xValue: number, yValue: number, dir: string) => {
@@ -184,6 +175,9 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       handleReset();
     })
     .onUpdate(e => {
+      if (!neighbors) {
+        return;
+      }
       let direction = '';
       if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
         if (e.translationX + x > x) {
@@ -200,7 +194,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       }
       if (
         direction === 'right' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'left')
+        Object.values(neighbors).find(neighb => neighb.direction === 'left')
       ) {
         if (
           offsetY.value === y &&
@@ -212,7 +206,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         }
       } else if (
         direction === 'left' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'right')
+        Object.values(neighbors).find(neighb => neighb.direction === 'right')
       ) {
         if (
           offsetY.value === y &&
@@ -224,7 +218,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         }
       } else if (
         direction === 'top' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'down')
+        Object.values(neighbors).find(neighb => neighb.direction === 'down')
       ) {
         if (
           offsetX.value === x &&
@@ -236,7 +230,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         }
       } else if (
         direction === 'down' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'top')
+        Object.values(neighbors).find(neighb => neighb.direction === 'top')
       ) {
         if (
           offsetX.value === x &&
@@ -249,6 +243,9 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       }
     })
     .onEnd(e => {
+      if (!neighbors) {
+        return;
+      }
       let xPosition = x;
       let yPosition = y;
       let direction = '';
@@ -267,7 +264,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
       }
       if (
         direction === 'right' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'left')
+        Object.values(neighbors).find(neighb => neighb.direction === 'left')
       ) {
         if (e.translationX >= 20) {
           xPosition = x + 40;
@@ -280,7 +277,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         }
       } else if (
         direction === 'left' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'right')
+        Object.values(neighbors).find(neighb => neighb.direction === 'right')
       ) {
         if (e.translationX <= -20) {
           xPosition = x - 40;
@@ -293,7 +290,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         }
       } else if (
         direction === 'top' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'down')
+        Object.values(neighbors).find(neighb => neighb.direction === 'down')
       ) {
         if (e.translationY >= 20) {
           yPosition = y + 40;
@@ -306,7 +303,7 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbours, position}) => {
         }
       } else if (
         direction === 'down' &&
-        Object.values(neighbours).find(neighb => neighb.direction === 'top')
+        Object.values(neighbors).find(neighb => neighb.direction === 'top')
       ) {
         if (e.translationY <= -20) {
           yPosition = y - 40;

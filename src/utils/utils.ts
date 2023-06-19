@@ -1,5 +1,7 @@
 import {BehaviorSubject} from 'rxjs';
 import {map, combineLatestWith} from 'rxjs/operators';
+import {CELL_SIZE} from '../constants/constants';
+import calculateNeighborTiles from './calculateNeighborTiles';
 
 export interface ITile {
   id: string;
@@ -16,13 +18,32 @@ export interface ITile {
 
 export const tiles$ = new BehaviorSubject<ITile[]>([]);
 
+export const levelProperties$ = new BehaviorSubject<{
+  level: number;
+  counter: number;
+  columns: number;
+  rows: number;
+  totalTiles: number;
+}>({
+  level: 1,
+  counter: 0,
+  columns: 0,
+  rows: 0,
+  totalTiles: 0,
+});
+
 export const tilesWithNeighbors$ = tiles$.pipe(
-  map(tiles =>
-    tiles.map(tile => ({
-      ...tile,
-      neighbors: {},
-    }))
-  )
+  combineLatestWith(levelProperties$),
+  map(([tiles, level]) => {
+    const tilesObject = Object.values(tiles);
+    return calculateNeighborTiles(
+      level.columns,
+      level.rows,
+      tilesObject,
+      level.totalTiles,
+      CELL_SIZE
+    );
+  })
 );
 
 export const selectedTiles$ = new BehaviorSubject<ITile[]>([]);
@@ -32,24 +53,7 @@ export const allTiles$ = tiles$.pipe(
   map(([tiles, selected]) =>
     tiles.map(tile => ({
       ...tile,
-      selected: selected.includes(tile),
+      selected: selected.filter(selectedTile => selectedTile.id === tile.id),
     }))
   )
 );
-
-export const levelProperties$ = new BehaviorSubject<{
-  level: number;
-  counter: number;
-  tiles: {
-    id: string;
-    x: number;
-    y: number;
-    position: number;
-    color: string;
-    active: boolean;
-  }[];
-}>({
-  level: 1,
-  counter: 0,
-  tiles: [],
-});

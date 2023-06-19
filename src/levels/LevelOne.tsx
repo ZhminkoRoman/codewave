@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {StyleSheet, Text, View} from 'react-native';
 
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
@@ -42,11 +42,35 @@ const styles = StyleSheet.create({
 });
 
 export default function LevelOne() {
+  const [tilesCount, setTilesCount] = useState<number>(0);
   useEffect(() => {
     levelProperties$.subscribe();
 
     return () => levelProperties$.unsubscribe();
   }, []);
+
+  const columns = useMemo(() => {
+    return 8;
+  }, []);
+
+  const rows = useMemo(() => {
+    return 8;
+  }, []);
+
+  const totalTiles = useMemo(() => {
+    return columns * rows;
+  }, [columns, rows]);
+
+  useEffect(() => {
+    levelProperties$.next({
+      level: 1,
+      counter: tilesCount,
+      columns,
+      rows,
+      totalTiles,
+    });
+  }, [columns, rows, tilesCount, totalTiles]);
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <>
@@ -55,7 +79,12 @@ export default function LevelOne() {
             Count: {levelProperties$.value.counter}
           </Text>
         </View>
-        <Field columns={8} rows={8} tilesCount={64} />
+        <Field
+          columns={8}
+          rows={8}
+          totalTiles={64}
+          handleTilesChange={(value: number) => setTilesCount(value)}
+        />
       </>
     </GestureHandlerRootView>
   );

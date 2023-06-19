@@ -9,8 +9,7 @@ import shortid from 'shortid';
 
 import Tile from '../Tile/Tile';
 import calculateNeighborTiles from '../../utils/calculateNeighborTiles';
-
-const CELL_SIZE = 40;
+import {CELL_SIZE} from '../../constants/constants';
 
 type ColorType = {
   [key: string]: string;
@@ -55,10 +54,16 @@ const styles = StyleSheet.create({
 export interface IFieldProps {
   columns: number;
   rows: number;
-  tilesCount: number;
+  totalTiles: number;
+  handleTilesChange: (value: number) => void;
 }
 
-const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
+const Field: React.FC<IFieldProps> = ({
+  columns,
+  rows,
+  totalTiles,
+  handleTilesChange,
+}) => {
   const [tilesArr, setTilesArr] = useState<ITile[]>([]);
 
   useEffect(() => {
@@ -70,7 +75,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
             columns,
             rows,
             val,
-            columns * rows,
+            totalTiles,
             CELL_SIZE
           );
           setTilesArr(updatedTiles);
@@ -83,44 +88,37 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
       tilesSubscription.unsubscribe();
       levelSubscription.unsubscribe();
     };
-  }, [columns, rows]);
+  }, [columns, rows, totalTiles]);
 
   useEffect(() => {
     let column = 1;
-    const obj: TilesObj = {};
-    for (let i = 0; i < tilesCount; i++) {
+    const tilesAsObject: TilesObj = {};
+    for (let i = 0; i < totalTiles; i++) {
       if (i >= column * columns) {
         column += 1;
       }
       const color = setRandomColor();
-      const lastColumnTileNumber = column * rows - 1;
+      const lastColumnsTileNumber = column * rows - 1;
 
-      let tile = {
+      const tile = {
         id: shortid.generate(),
         color,
-        x: 0,
-        y: 0,
+        x: (column - 1) * CELL_SIZE,
+        y: (lastColumnsTileNumber - i) * CELL_SIZE,
         position: i,
         neighbors: {},
       };
-      if (i <= lastColumnTileNumber) {
-        tile = {
-          ...tile,
-          x: (column - 1) * CELL_SIZE,
-          y: (lastColumnTileNumber - i) * CELL_SIZE,
-        };
-      }
-      obj[i] = tile;
+      tilesAsObject[i] = tile;
     }
     const updatedTiles = calculateNeighborTiles(
       columns,
       rows,
-      obj,
-      columns * rows,
+      tilesAsObject,
+      totalTiles,
       CELL_SIZE
     );
     tiles$.next(updatedTiles);
-  }, [columns, rows, tilesCount]);
+  }, [columns, rows, totalTiles]);
 
   const fieldWidth = useMemo(() => {
     return columns * CELL_SIZE + 4;
@@ -140,7 +138,7 @@ const Field: React.FC<IFieldProps> = ({columns, rows, tilesCount}) => {
             id={tile.id}
             x={tile.x}
             y={tile.y}
-            neighbours={tile.neighbors}
+            neighbors={tile.neighbors}
             position={tile.position}
           />
         );
