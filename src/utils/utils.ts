@@ -32,6 +32,9 @@ export const levelProperties$ = new BehaviorSubject<{
   totalTiles: 0,
 });
 
+export const selectedTiles$ = new BehaviorSubject<ITile[]>([]);
+export const movingTiles$ = new BehaviorSubject<ITile | undefined>(undefined);
+
 export const tilesWithNeighbors$ = tiles$.pipe(
   combineLatestWith(levelProperties$),
   map(([tiles, level]) => {
@@ -46,14 +49,13 @@ export const tilesWithNeighbors$ = tiles$.pipe(
   })
 );
 
-export const selectedTiles$ = new BehaviorSubject<ITile[]>([]);
-
-export const allTiles$ = tiles$.pipe(
+export const allTiles$ = tilesWithNeighbors$.pipe(
   combineLatestWith(selectedTiles$),
-  map(([tiles, selected]) =>
-    tiles.map(tile => ({
+  map(([tiles, selected]) => {
+    console.log('selected', selected);
+    return tiles.map(tile => ({
       ...tile,
       selected: selected.filter(selectedTile => selectedTile.id === tile.id),
-    }))
-  )
+    }));
+  })
 );

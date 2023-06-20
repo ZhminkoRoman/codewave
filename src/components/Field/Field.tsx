@@ -3,20 +3,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import React, {useEffect, useMemo, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {ITile, allTiles$, levelProperties$, tiles$} from '../../utils/utils';
-import {tap} from 'rxjs/operators';
+import {ITile, allTiles$, tiles$, tilesWithNeighbors$} from '../../utils/utils';
 import shortid from 'shortid';
 
 import Tile from '../Tile/Tile';
-import calculateNeighborTiles from '../../utils/calculateNeighborTiles';
 import {CELL_SIZE} from '../../constants/constants';
 
 type ColorType = {
   [key: string]: string;
-};
-
-type TilesObj = {
-  [key: number]: ITile;
 };
 
 const colors: ColorType = {
@@ -67,32 +61,18 @@ const Field: React.FC<IFieldProps> = ({
   const [tilesArr, setTilesArr] = useState<ITile[]>([]);
 
   useEffect(() => {
-    const tilesSubscription = allTiles$
-      .pipe(
-        tap(subedTiles => {
-          const val = Object.values(subedTiles);
-          const updatedTiles = calculateNeighborTiles(
-            columns,
-            rows,
-            val,
-            totalTiles,
-            CELL_SIZE
-          );
-          setTilesArr(updatedTiles);
-        })
-      )
-      .subscribe();
-    const levelSubscription = levelProperties$.subscribe();
+    const tilesSubscription = allTiles$.subscribe(subscribedTiles =>
+      setTilesArr(subscribedTiles)
+    );
 
     return () => {
       tilesSubscription.unsubscribe();
-      levelSubscription.unsubscribe();
     };
-  }, [columns, rows, totalTiles]);
+  }, []);
 
   useEffect(() => {
     let column = 1;
-    const tilesAsObject: TilesObj = {};
+    const tilesArray: ITile[] = [];
     for (let i = 0; i < totalTiles; i++) {
       if (i >= column * columns) {
         column += 1;
@@ -108,16 +88,9 @@ const Field: React.FC<IFieldProps> = ({
         position: i,
         neighbors: {},
       };
-      tilesAsObject[i] = tile;
+      tilesArray.push(tile);
     }
-    const updatedTiles = calculateNeighborTiles(
-      columns,
-      rows,
-      tilesAsObject,
-      totalTiles,
-      CELL_SIZE
-    );
-    tiles$.next(updatedTiles);
+    tiles$.next(tilesArray);
   }, [columns, rows, totalTiles]);
 
   const fieldWidth = useMemo(() => {

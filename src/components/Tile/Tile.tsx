@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {tap} from 'rxjs/operators';
-import {selectedTiles$, tiles$} from '../../utils/utils';
+import {movingTiles$, selectedTiles$, tiles$} from '../../utils/utils';
 import {NeighborTilesType} from '../../utils/calculateNeighborTiles';
 
 const styles = StyleSheet.create({
@@ -65,21 +65,23 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
   }, []);
 
   useEffect(() => {
-    const subSelectedTiles = selectedTiles$
-      .pipe
-      // tap(tiles => {
-      //   if (tiles && neighbors && neighbors[tile?.position]) {
-      //     if (neighbors[tile.position].direction === tile.dir) {
-      //       offsetX.value = withSpring(x - tile.x, springOptions);
-      //       offsetY.value = withSpring(y - tile.y, springOptions);
-      //     }
-      //   }
-      // })
-      ()
+    const subSelectedTiles = selectedTiles$.subscribe();
+    const movingTilesSubscription = movingTiles$
+      .pipe(
+        tap(tile => {
+          if (tile && neighbors && neighbors[tile?.position]) {
+            if (neighbors[tile.position].direction === tile.direction) {
+              offsetX.value = withSpring(x - tile.x, springOptions);
+              offsetY.value = withSpring(y - tile.y, springOptions);
+            }
+          }
+        })
+      )
       .subscribe();
 
     return () => {
       subSelectedTiles.unsubscribe();
+      movingTilesSubscription.unsubscribe();
     };
   }, [id, neighbors, offsetX, offsetY, springOptions, x, y]);
 
@@ -131,7 +133,8 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
       }
 
       // tilesSubject$.next(filtered);
-      selectedTiles$.next([]);
+      movingTiles$.next(undefined);
+      selectedTiles$.next([changedTile, fullChangedTile]);
     }
   };
 
@@ -142,20 +145,19 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
   };
 
   const subscriberTile = (xValue: number, yValue: number, dir: string) => {
-    selectedTiles$.next([
-      {
-        x: xValue,
-        y: yValue,
-        position,
-        id,
-        color,
-        direction: dir,
-      },
-    ]);
+    movingTiles$.next({
+      x: xValue,
+      y: yValue,
+      position,
+      id,
+      color,
+      direction: dir,
+    });
   };
 
   const resetTile = () => {
-    selectedTiles$.next([]);
+    // selectedTiles$.next([]);
+    movingTiles$.next(undefined);
   };
 
   const handleSwipeUpdate = (xValue: number, yValue: number, dir: string) => {
