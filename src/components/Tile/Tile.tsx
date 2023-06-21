@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {tap} from 'rxjs/operators';
-import {movingTiles$, selectedTiles$, tiles$} from '../../utils/utils';
+import {ITile, movingTiles$, tiles$} from '../../utils/utils';
 import {NeighborTilesType} from '../../utils/calculateNeighborTiles';
 
 const styles = StyleSheet.create({
@@ -32,16 +32,25 @@ const styles = StyleSheet.create({
   },
 });
 
-export interface ITile {
+export interface ITileInt {
   color: string;
   id: string;
   x: number;
   y: number;
   position: number;
   neighbors?: NeighborTilesType;
+  onSwipe: (changedTile: ITile, fullChangedTile: ITile) => void;
 }
 
-const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
+const Tile: React.FC<ITileInt> = ({
+  color,
+  id,
+  x,
+  y,
+  neighbors,
+  position,
+  onSwipe,
+}) => {
   const offsetX = useSharedValue(x);
   const offsetY = useSharedValue(y);
 
@@ -65,7 +74,8 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
   }, []);
 
   useEffect(() => {
-    const subSelectedTiles = selectedTiles$.subscribe();
+    console.log(`TILE ${position} subscribe`);
+
     const movingTilesSubscription = movingTiles$
       .pipe(
         tap(tile => {
@@ -79,11 +89,13 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
       )
       .subscribe();
 
+    //TODO: figure out how to unsubscribe this components;
+
     return () => {
-      subSelectedTiles.unsubscribe();
+      console.log(`TILE ${position} unsubscribe`);
       movingTilesSubscription.unsubscribe();
     };
-  }, [id, neighbors, offsetX, offsetY, springOptions, x, y]);
+  }, [id, neighbors, offsetX, offsetY, springOptions, x, y, position]);
 
   const subscriber = (xValue: number, yValue: number) => {
     if (!neighbors) {
@@ -134,7 +146,10 @@ const Tile: React.FC<ITile> = ({color, id, x, y, neighbors, position}) => {
 
       // tilesSubject$.next(filtered);
       movingTiles$.next(undefined);
-      selectedTiles$.next([changedTile, fullChangedTile]);
+      if (changedTile && fullChangedTile) {
+        onSwipe(changedTile, fullChangedTile);
+      }
+      // selectedTiles$.next([changedTile, fullChangedTile]);
     }
   };
 

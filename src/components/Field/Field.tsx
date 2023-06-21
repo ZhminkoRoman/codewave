@@ -3,7 +3,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import React, {useEffect, useMemo, useState} from 'react';
 import {StyleSheet, View} from 'react-native';
-import {ITile, allTiles$, tiles$, tilesWithNeighbors$} from '../../utils/utils';
+import {
+  ITile,
+  allTiles$,
+  movingTiles$,
+  selectedTiles$,
+  tiles$,
+  tilesWithNeighbors$,
+} from '../../utils/utils';
 import shortid from 'shortid';
 
 import Tile from '../Tile/Tile';
@@ -61,14 +68,19 @@ const Field: React.FC<IFieldProps> = ({
   const [tilesArr, setTilesArr] = useState<ITile[]>([]);
 
   useEffect(() => {
-    const tilesSubscription = allTiles$.subscribe(subscribedTiles =>
-      setTilesArr(subscribedTiles)
-    );
+    console.log('FIELD subscribe');
+    const tilesSubscription = allTiles$.subscribe(subscribedTiles => {
+      console.log('FIELD UPDATE');
+      setTilesArr(subscribedTiles);
+    });
 
     return () => {
+      console.log('FIELD unsubscribe');
       tilesSubscription.unsubscribe();
     };
   }, []);
+
+  console.log('FIELD rerender');
 
   useEffect(() => {
     let column = 1;
@@ -93,6 +105,10 @@ const Field: React.FC<IFieldProps> = ({
     tiles$.next(tilesArray);
   }, [columns, rows, totalTiles]);
 
+  const handleTileSwipe = (changedTile: ITile, fullChangedTile: ITile) => {
+    selectedTiles$.next([changedTile, fullChangedTile]);
+  };
+
   const fieldWidth = useMemo(() => {
     return columns * CELL_SIZE + 4;
   }, [columns]);
@@ -113,6 +129,7 @@ const Field: React.FC<IFieldProps> = ({
             y={tile.y}
             neighbors={tile.neighbors}
             position={tile.position}
+            onSwipe={handleTileSwipe}
           />
         );
       })}

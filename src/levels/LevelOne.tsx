@@ -43,10 +43,16 @@ const styles = StyleSheet.create({
 
 export default function LevelOne() {
   const [tilesCount, setTilesCount] = useState<number>(0);
-  useEffect(() => {
-    levelProperties$.subscribe();
+  const [levelLoaded, setLevelLoaded] = useState(false);
 
-    return () => levelProperties$.unsubscribe();
+  useEffect(() => {
+    console.log('LEVEL subscribe');
+    const levelSubscription = levelProperties$.subscribe();
+
+    return () => {
+      console.log('LEVEL unsubscribe');
+      levelSubscription.unsubscribe();
+    };
   }, []);
 
   const columns = useMemo(() => {
@@ -62,6 +68,7 @@ export default function LevelOne() {
   }, [columns, rows]);
 
   useEffect(() => {
+    console.log('LEVEL next');
     levelProperties$.next({
       level: 1,
       counter: tilesCount,
@@ -70,6 +77,20 @@ export default function LevelOne() {
       totalTiles,
     });
   }, [columns, rows, tilesCount, totalTiles]);
+
+  useEffect(() => {
+    if (
+      levelProperties$.value.columns &&
+      levelProperties$.value.rows &&
+      levelProperties$.value.totalTiles
+    ) {
+      setLevelLoaded(true);
+    }
+  }, []);
+
+  if (!levelLoaded) {
+    return;
+  }
 
   return (
     <GestureHandlerRootView style={styles.container}>
@@ -80,9 +101,9 @@ export default function LevelOne() {
           </Text>
         </View>
         <Field
-          columns={8}
-          rows={8}
-          totalTiles={64}
+          columns={levelProperties$.value.columns}
+          rows={levelProperties$.value.rows}
+          totalTiles={levelProperties$.value.totalTiles}
           handleTilesChange={(value: number) => setTilesCount(value)}
         />
       </>

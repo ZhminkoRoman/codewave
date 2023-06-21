@@ -52,7 +52,6 @@ export const tilesWithNeighbors$ = tiles$.pipe(
 export const allTiles$ = tilesWithNeighbors$.pipe(
   combineLatestWith(selectedTiles$),
   map(([tiles, selected]) => {
-    console.log('selected', selected);
     return tiles.map(tile => ({
       ...tile,
       selected: selected.filter(selectedTile => selectedTile.id === tile.id),
