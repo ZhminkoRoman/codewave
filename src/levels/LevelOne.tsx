@@ -44,13 +44,28 @@ const styles = StyleSheet.create({
 export default function LevelOne() {
   const [tilesCount, setTilesCount] = useState<number>(0);
   const [levelLoaded, setLevelLoaded] = useState(false);
+  const [levelProperties, setLevelProperties] = useState<{
+    level: number;
+    counter: number;
+    columns: number;
+    rows: number;
+    totalTiles: number;
+  }>({
+    level: 1,
+    counter: 0,
+    columns: 0,
+    rows: 0,
+    totalTiles: 0,
+  });
 
   useEffect(() => {
-    console.log('LEVEL subscribe');
-    const levelSubscription = levelProperties$.subscribe();
+    // console.log('LEVEL subscribe');
+    const levelSubscription = levelProperties$.subscribe(propss =>
+      setLevelProperties(propss)
+    );
 
     return () => {
-      console.log('LEVEL unsubscribe');
+      // console.log('LEVEL unsubscribe');
       levelSubscription.unsubscribe();
     };
   }, []);
@@ -68,7 +83,7 @@ export default function LevelOne() {
   }, [columns, rows]);
 
   useEffect(() => {
-    console.log('LEVEL next');
+    // console.log('LEVEL next');
     levelProperties$.next({
       level: 1,
       counter: tilesCount,
@@ -97,15 +112,17 @@ export default function LevelOne() {
       <>
         <View style={styles.counter}>
           <Text style={{color: '#fff', fontWeight: '700'}}>
-            Count: {levelProperties$.value.counter}
+            Count: {levelProperties.counter}
           </Text>
         </View>
-        <Field
-          columns={levelProperties$.value.columns}
-          rows={levelProperties$.value.rows}
-          totalTiles={levelProperties$.value.totalTiles}
-          handleTilesChange={(value: number) => setTilesCount(value)}
-        />
+        {levelProperties.counter === 0 ? (
+          <Field
+            columns={levelProperties.columns}
+            rows={levelProperties.rows}
+            totalTiles={levelProperties.totalTiles}
+            handleTilesChange={(value: number) => setTilesCount(value)}
+          />
+        ) : null}
       </>
     </GestureHandlerRootView>
   );

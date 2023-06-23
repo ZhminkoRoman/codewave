@@ -4,28 +4,23 @@
 import React, {useEffect, useMemo, useCallback} from 'react';
 import {StyleSheet, View} from 'react-native';
 import {useObservableState} from 'observable-hooks';
-import {
-  ITile,
-  allTiles$,
-  movingTiles$,
-  selectedTiles$,
-  tiles$,
-  tilesWithNeighbors$,
-} from '../../utils/utils';
+import {ITile, allTiles$, selectedTiles$, tiles$} from '../../utils/utils';
 import shortid from 'shortid';
 
 import Tile from '../Tile/Tile';
 import {CELL_SIZE} from '../../constants/constants';
+import TestTile from '../TestTile/TestTile';
+import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 
 type ColorType = {
   [key: string]: string;
 };
 
 const colors: ColorType = {
-  '1': '#8c221d',
-  '2': '#395789',
-  '3': '#FFAC4D',
-  '4': '#ccc',
+  '1': '#FF4365',
+  '2': '#00F1FF',
+  '3': '#fefd42',
+  '4': '#fff',
 };
 
 // #66dbd9;
@@ -40,16 +35,6 @@ const styles = StyleSheet.create({
   field: {
     position: 'relative',
     display: 'flex',
-    // backgroundColor: '#fff',
-    // backgroundColor: '#221a22',
-    // backgroundColor: '#035b6d',
-    // shadowColor: '#fff',
-    // shadowOffset: {
-    //   width: 0,
-    //   height: 0,
-    // },
-    // shadowOpacity: 1,
-    // shadowRadius: 5,
   },
 });
 
@@ -67,10 +52,6 @@ const Field: React.FC<IFieldProps> = ({
   handleTilesChange,
 }) => {
   const tilesArr = useObservableState(allTiles$, []);
-
-  const updTiles = useMemo(() => {
-    return tilesArr;
-  }, [tilesArr]);
 
   useEffect(() => {
     let column = 1;
@@ -95,13 +76,6 @@ const Field: React.FC<IFieldProps> = ({
     tiles$.next(tilesArray);
   }, [columns, rows, totalTiles]);
 
-  const handleTileSwipe = useCallback(
-    (changedTile: ITile, fullChangedTile: ITile) => {
-      selectedTiles$.next([changedTile, fullChangedTile]);
-    },
-    []
-  );
-
   const fieldWidth = useMemo(() => {
     return columns * CELL_SIZE + 4;
   }, [columns]);
@@ -110,19 +84,22 @@ const Field: React.FC<IFieldProps> = ({
     return rows * CELL_SIZE + 4;
   }, [rows]);
 
+  const handleStartMovingTile = useCallback((position: number) => {
+    console.log(position);
+  }, []);
+
   return (
     <View style={[styles.field, {width: fieldWidth, height: fieldHeight}]}>
-      {updTiles.map(tile => {
+      {tilesArr.map(tile => {
         return (
-          <Tile
+          <TestTile
             color={tile.color}
-            key={tile.id}
             id={tile.id}
+            key={tile.id}
             x={tile.x}
             y={tile.y}
-            neighbors={tile.neighbors}
             position={tile.position}
-            onSwipe={handleTileSwipe}
+            handleStartMovingTile={handleStartMovingTile}
           />
         );
       })}

@@ -1,5 +1,5 @@
 import {BehaviorSubject} from 'rxjs';
-import {map, combineLatestWith, combineLatest} from 'rxjs/operators';
+import {map, combineLatestWith} from 'rxjs/operators';
 import {CELL_SIZE} from '../constants/constants';
 import calculateNeighborTiles from './calculateNeighborTiles';
 
@@ -52,6 +52,7 @@ export const tilesWithNeighbors$ = tiles$.pipe(
 export const allTiles$ = tilesWithNeighbors$.pipe(
   combineLatestWith(selectedTiles$),
   map(([tiles, selected]) => {
+    console.log(selected);
     return tiles.map(tile => {
       const selectedTile = selected.find(s => s.id === tile.id);
       return {

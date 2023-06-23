@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, memo} from 'react';
 import {StyleSheet, Text} from 'react-native';
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import Animated, {
@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {tap} from 'rxjs/operators';
-import {ITile, movingTiles$} from '../../utils/utils';
+import {ITile, levelProperties$, movingTiles$} from '../../utils/utils';
 import {NeighborTilesType} from '../../utils/calculateNeighborTiles';
 
 const styles = StyleSheet.create({
@@ -74,8 +74,6 @@ const Tile: React.FC<ITileInt> = ({
   }, []);
 
   useEffect(() => {
-    console.log(`TILE ${position} subscribe`);
-
     const movingTilesSubscription = movingTiles$
       .pipe(
         tap(tile => {
@@ -90,7 +88,6 @@ const Tile: React.FC<ITileInt> = ({
       .subscribe();
 
     return () => {
-      console.log(`TILE ${position} unsubscribe`);
       movingTilesSubscription.unsubscribe();
     };
   }, [id, neighbors, offsetX, offsetY, springOptions, x, y, position]);
@@ -102,10 +99,14 @@ const Tile: React.FC<ITileInt> = ({
     const changedTile = Object.values(neighbors).find(
       tile => tile.x === xValue && tile.y === yValue
     );
-    console.log(changedTile);
     if (changedTile) {
       movingTiles$.next(undefined);
-      if (changedTile) {
+      if (changedTile.position === 15) {
+        levelProperties$.next({
+          ...levelProperties$.value,
+          counter: 1,
+        });
+      } else if (changedTile) {
         onSwipe(changedTile, changedTile);
       }
     }
@@ -328,4 +329,4 @@ const Tile: React.FC<ITileInt> = ({
   );
 };
 
-export default Tile;
+export default memo(Tile);
