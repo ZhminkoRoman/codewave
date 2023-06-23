@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useCallback} from 'react';
 import {StyleSheet, View} from 'react-native';
+import {useObservableState} from 'observable-hooks';
 import {
   ITile,
   allTiles$,
@@ -65,22 +66,11 @@ const Field: React.FC<IFieldProps> = ({
   totalTiles,
   handleTilesChange,
 }) => {
-  const [tilesArr, setTilesArr] = useState<ITile[]>([]);
+  const tilesArr = useObservableState(allTiles$, []);
 
-  useEffect(() => {
-    console.log('FIELD subscribe');
-    const tilesSubscription = allTiles$.subscribe(subscribedTiles => {
-      console.log('FIELD UPDATE');
-      setTilesArr(subscribedTiles);
-    });
-
-    return () => {
-      console.log('FIELD unsubscribe');
-      tilesSubscription.unsubscribe();
-    };
-  }, []);
-
-  console.log('FIELD rerender');
+  const updTiles = useMemo(() => {
+    return tilesArr;
+  }, [tilesArr]);
 
   useEffect(() => {
     let column = 1;
@@ -105,9 +95,12 @@ const Field: React.FC<IFieldProps> = ({
     tiles$.next(tilesArray);
   }, [columns, rows, totalTiles]);
 
-  const handleTileSwipe = (changedTile: ITile, fullChangedTile: ITile) => {
-    selectedTiles$.next([changedTile, fullChangedTile]);
-  };
+  const handleTileSwipe = useCallback(
+    (changedTile: ITile, fullChangedTile: ITile) => {
+      selectedTiles$.next([changedTile, fullChangedTile]);
+    },
+    []
+  );
 
   const fieldWidth = useMemo(() => {
     return columns * CELL_SIZE + 4;
@@ -119,7 +112,7 @@ const Field: React.FC<IFieldProps> = ({
 
   return (
     <View style={[styles.field, {width: fieldWidth, height: fieldHeight}]}>
-      {tilesArr.map(tile => {
+      {updTiles.map(tile => {
         return (
           <Tile
             color={tile.color}

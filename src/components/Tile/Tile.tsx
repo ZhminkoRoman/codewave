@@ -8,7 +8,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import {tap} from 'rxjs/operators';
-import {ITile, movingTiles$, tiles$} from '../../utils/utils';
+import {ITile, movingTiles$} from '../../utils/utils';
 import {NeighborTilesType} from '../../utils/calculateNeighborTiles';
 
 const styles = StyleSheet.create({
@@ -89,8 +89,6 @@ const Tile: React.FC<ITileInt> = ({
       )
       .subscribe();
 
-    //TODO: figure out how to unsubscribe this components;
-
     return () => {
       console.log(`TILE ${position} unsubscribe`);
       movingTilesSubscription.unsubscribe();
@@ -104,52 +102,12 @@ const Tile: React.FC<ITileInt> = ({
     const changedTile = Object.values(neighbors).find(
       tile => tile.x === xValue && tile.y === yValue
     );
-    const fullChangedTile = tiles$.value.find(
-      tile => tile.id === changedTile?.id
-    );
-    if (fullChangedTile && changedTile) {
-      const filtered = tiles$.value.filter(
-        tile => tile.id !== id && tile.id !== changedTile?.id
-      );
-
-      if (fullChangedTile?.position < position) {
-        filtered.splice(fullChangedTile?.position, 0, {
-          id,
-          color,
-          position: fullChangedTile?.position,
-          x: xValue,
-          y: yValue,
-          neighbors,
-        });
-        filtered.splice(position, 0, {
-          ...fullChangedTile,
-          x: x,
-          y: y,
-          position: position,
-        });
-      } else {
-        filtered.splice(position, 0, {
-          ...fullChangedTile,
-          x: x,
-          y: y,
-          position: position,
-        });
-        filtered.splice(fullChangedTile?.position, 0, {
-          id,
-          color,
-          position: fullChangedTile?.position,
-          x: xValue,
-          y: yValue,
-          neighbors,
-        });
-      }
-
-      // tilesSubject$.next(filtered);
+    console.log(changedTile);
+    if (changedTile) {
       movingTiles$.next(undefined);
-      if (changedTile && fullChangedTile) {
-        onSwipe(changedTile, fullChangedTile);
+      if (changedTile) {
+        onSwipe(changedTile, changedTile);
       }
-      // selectedTiles$.next([changedTile, fullChangedTile]);
     }
   };
 
@@ -171,7 +129,6 @@ const Tile: React.FC<ITileInt> = ({
   };
 
   const resetTile = () => {
-    // selectedTiles$.next([]);
     movingTiles$.next(undefined);
   };
 

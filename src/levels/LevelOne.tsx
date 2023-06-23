@@ -89,7 +89,7 @@ export default function LevelOne() {
   }, []);
 
   if (!levelLoaded) {
-    return;
+    return null;
   }
 
   return (
