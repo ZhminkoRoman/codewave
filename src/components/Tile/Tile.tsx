@@ -23,6 +23,7 @@ const styles = StyleSheet.create({
     height: 34,
     borderWidth: 2,
     borderStyle: 'solid',
+    borderColor: '#fff',
   },
   tileText: {
     fontSize: 8,
@@ -39,7 +40,7 @@ export interface ITileInt {
   y: number;
   position: number;
   neighbors?: NeighborTilesType;
-  onSwipe: (changedTile: ITile, fullChangedTile: ITile) => void;
+  onSwipe?: (changedTile: ITile, fullChangedTile: ITile) => void;
 }
 
 const Tile: React.FC<ITileInt> = ({
@@ -54,17 +55,17 @@ const Tile: React.FC<ITileInt> = ({
   const offsetX = useSharedValue(x);
   const offsetY = useSharedValue(y);
 
-  const borderColor = useMemo(() => {
-    if (color === '#FFAC4D') {
-      return '#fefd42';
-    } else if (color === '#395789') {
-      return '#00F1FF';
-    } else if (color === '#8c221d') {
-      return '#FF4365';
-    } else if (color === '#ccc') {
-      return '#fff';
-    }
-  }, [color]);
+  // const borderColor = useMemo(() => {
+  //   if (color === '#FFAC4D') {
+  //     return '#fefd42';
+  //   } else if (color === '#395789') {
+  //     return '#00F1FF';
+  //   } else if (color === '#8c221d') {
+  //     return '#FF4365';
+  //   } else if (color === '#ccc') {
+  //     return '#fff';
+  //   }
+  // }, [color]);
 
   const springOptions = useMemo(() => {
     return {
@@ -107,7 +108,7 @@ const Tile: React.FC<ITileInt> = ({
           counter: 1,
         });
       } else if (changedTile) {
-        onSwipe(changedTile, changedTile);
+        // onSwipe(changedTile, changedTile);
       }
     }
   };
@@ -150,9 +151,9 @@ const Tile: React.FC<ITileInt> = ({
       handleReset();
     })
     .onUpdate(e => {
-      if (!neighbors) {
-        return;
-      }
+      // if (!neighbors) {
+      //   return;
+      // }
       let direction = '';
       if (Math.abs(e.translationX) > Math.abs(e.translationY)) {
         if (e.translationX + x > x) {
@@ -167,10 +168,7 @@ const Tile: React.FC<ITileInt> = ({
           direction = 'down';
         }
       }
-      if (
-        direction === 'right' &&
-        Object.values(neighbors).find(neighb => neighb.direction === 'left')
-      ) {
+      if (direction === 'right') {
         if (
           offsetY.value === y &&
           e.translationX <= 40 &&
@@ -179,10 +177,7 @@ const Tile: React.FC<ITileInt> = ({
           offsetX.value = withSpring(e.translationX + x, springOptions);
           handleSwipeUpdate(e.translationX, 0, direction);
         }
-      } else if (
-        direction === 'left' &&
-        Object.values(neighbors).find(neighb => neighb.direction === 'right')
-      ) {
+      } else if (direction === 'left') {
         if (
           offsetY.value === y &&
           e.translationX <= 40 &&
@@ -191,10 +186,7 @@ const Tile: React.FC<ITileInt> = ({
           offsetX.value = withSpring(e.translationX + x, springOptions);
           handleSwipeUpdate(e.translationX, 0, direction);
         }
-      } else if (
-        direction === 'top' &&
-        Object.values(neighbors).find(neighb => neighb.direction === 'down')
-      ) {
+      } else if (direction === 'top') {
         if (
           offsetX.value === x &&
           e.translationY <= 40 &&
@@ -203,10 +195,7 @@ const Tile: React.FC<ITileInt> = ({
           offsetY.value = withSpring(e.translationY + y, springOptions);
           handleSwipeUpdate(0, e.translationY, direction);
         }
-      } else if (
-        direction === 'down' &&
-        Object.values(neighbors).find(neighb => neighb.direction === 'top')
-      ) {
+      } else if (direction === 'down') {
         if (
           offsetX.value === x &&
           e.translationY <= 40 &&
@@ -309,21 +298,20 @@ const Tile: React.FC<ITileInt> = ({
               width: 0,
               height: 0,
             },
-            borderColor: borderColor,
             shadowOpacity: 0.5,
             shadowRadius: 10,
           },
           animatedStyle,
         ]}>
-        <Text
+        {/* <Text
           style={[
             styles.tileText,
             {
-              color: borderColor,
+              color: '#000',
             },
           ]}>
           {id}
-        </Text>
+        </Text> */}
       </Animated.View>
     </GestureDetector>
   );

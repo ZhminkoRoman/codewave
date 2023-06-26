@@ -56,7 +56,7 @@ const TestTile: React.FC<ITileInt> = ({
 
   const handleMove = (xValue: number, yValue: number) => {
     'worklet';
-    console.log(xValue, yValue, position);
+    // console.log(xValue, yValue, position);
     runOnJS(handleStartMovingTile)(position);
   };
 

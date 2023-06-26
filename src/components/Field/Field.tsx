@@ -53,7 +53,7 @@ const Field: React.FC<IFieldProps> = ({
 }) => {
   const tilesArr = useObservableState(allTiles$, []);
 
-  useEffect(() => {
+  const generatedTiles = useMemo(() => {
     let column = 1;
     const tilesArray: ITile[] = [];
     for (let i = 0; i < totalTiles; i++) {
@@ -73,8 +73,14 @@ const Field: React.FC<IFieldProps> = ({
       };
       tilesArray.push(tile);
     }
-    tiles$.next(tilesArray);
+    return tilesArray;
   }, [columns, rows, totalTiles]);
+
+  useEffect(() => {
+    if (generatedTiles.length > 0) {
+      tiles$.next(generatedTiles);
+    }
+  }, [generatedTiles]);
 
   const fieldWidth = useMemo(() => {
     return columns * CELL_SIZE + 4;
@@ -90,17 +96,30 @@ const Field: React.FC<IFieldProps> = ({
 
   return (
     <View style={[styles.field, {width: fieldWidth, height: fieldHeight}]}>
-      {tilesArr.map(tile => {
+      {generatedTiles.map(tile => {
         return (
-          <TestTile
+          <Tile
             color={tile.color}
             id={tile.id}
             key={tile.id}
             x={tile.x}
             y={tile.y}
             position={tile.position}
-            handleStartMovingTile={handleStartMovingTile}
+            // neighbors={tile.neighbors}
+            onSwipe={() => {
+              console.log('');
+            }}
+            // handleStartMovingTile={handleStartMovingTile}
           />
+          // <TestTile
+          //   color={tile.color}
+          //   id={tile.id}
+          //   key={tile.id}
+          //   x={tile.x}
+          //   y={tile.y}
+          //   position={tile.position}
+          //   handleStartMovingTile={handleStartMovingTile}
+          // />
         );
       })}
     </View>
